@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+
+#layouts
+yabai -m config layout bsp
+yabai -m space 1 --label home
+yabai -m space 2 --label web
+yabai -m space 3 --label ide
+yabai -m space 4 --label chat
+yabai -m space 5 --label casual
+yabai -m space 6 --label office
+yabai -m space 7 --label games
+yabai -m config --space 3 layout float
+yabai -m config --space 5 layout float
+yabai -m config --space 7 layout float
+yabai -m config --space 8 layout float
+
+#paddings, gaps
+yabai -m config external_bar all:22:0
+yabai -m config window_gap 8
+yabai -m config top_padding 8
+yabai -m config bottom_padding 8
+yabai -m config left_padding 8
+yabai -m config right_padding 8
+
+#mouse
+yabai -m config mouse_follows_focus off
+yabai -m config focus_follows_mouse off
+yabai -m config mouse_modifier fn
+
+#miniyabar
+yabai -m signal --add event=space_changed \
+    action="osascript -e 'tell application \"Übersicht\" to refresh widget id \"clarity-spaces-primary-jsx\"'"
+yabai -m signal --add event=display_changed \
+    action="osascript -e 'tell application \"Übersicht\" to refresh widget id \"clarity-spaces-primary-jsx\"'"
+
+yabai -m signal --add event=space_changed \
+    action="osascript -e 'tell application \"Übersicht\" to refresh widget id \"clarity-spaces-secondary-jsx\"'"
+yabai -m signal --add event=display_changed \
+    action="osascript -e 'tell application \"Übersicht\" to refresh widget id \"clarity-spaces-secondary-jsx\"'"
+
+yabai -m signal --add event=window_title_changed \
+    action="osascript -e 'tell application \"Übersicht\" to refresh widget id \"clarity-title-primary-jsx\"'"
+yabai -m signal --add event=window_focused \
+    action="osascript -e 'tell application \"Übersicht\" to refresh widget id \"clarity-title-primary-jsx\"'"
+yabai -m signal --add event=application_front_switched \
+    action="osascript -e 'tell application \"Übersicht\" to refresh widget id \"clarity-title-primary-jsx\"'"
+
+yabai -m signal --add event=window_title_changed \
+    action="osascript -e 'tell application \"Übersicht\" to refresh widget id \"clarity-title-secondary-jsx\"'"
+yabai -m signal --add event=window_focused \
+    action="osascript -e 'tell application \"Übersicht\" to refresh widget id \"clarity-title-secondary-jsx\"'"
+yabai -m signal --add event=application_front_switched \
+    action="osascript -e 'tell application \"Übersicht\" to refresh widget id \"clarity-title-secondary-jsx\"'"
+
+#floating
+#yabai -m config window_topmost on
+
+#appearance
+yabai -m config window_shadow off
+yabai -m config window_border on
+yabai -m config window_border_width 4
+yabai -m config active_window_border_color 0xdd0088ff
+yabai -m config normal_window_border_color 0xdd333333
+yabai -m config insert_feedback_color      0xddff8800
+yabai -m config window_opacity               off
+yabai -m config active_window_opacity        1.0
+yabai -m config normal_window_opacity        1.0
+yabai -m config window_opacity_duration      0.0 #must be 0 due to catalina bug
+
+#exceptions to apps and things that tend to not work well
+yabai -m rule --add title="^Preferences$" manage=off
+yabai -m rule --add title="^Passwords$" manage=off
+yabai -m rule --add app="^(About This Mac|System Information)$" manage=off
+yabai -m rule --add app="^Finder$" title="^(Move|Copy|Delete|Connecting to Server)$" manage=off
+yabai -m rule --add app="^System Preferences$" manage=off
+yabai -m rule --add app="^Digital Color Meter$" manage=off
+yabai -m rule --add app="^(Archive Utility|DiskImageMounter)$" manage=off
+yabai -m rule --add app="^Stickies$" manage=off
+yabai -m rule --add app="^Microsoft Teams$" title="^Microsoft Teams Notification$" manage=off
+yabai -m rule --add app="^Delete Apps$" manage=off
+yabai -m rule --add app="^FaceTime$" manage=off
+
+echo "yabai config is now loaded."
+

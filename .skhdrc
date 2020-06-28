@@ -1,0 +1,170 @@
+:: default : osascript -e 'display notification with title "skhd is active" subtitle "all keybindings mapped to yabai wm"'
+:: nopayload : osascript -e 'display notification with title "skhd is active" subtitle "nopayload keybindings mapped to yabai wm"'
+:: passthrough : osascript -e 'display notification with title "skhd is inactive" subtitle "all keybindings passed to active app"'
+
+fn + ctrl + alt + cmd - z ; nopayload
+default, nopayload < fn + ctrl + alt + cmd - x ; passthrough
+passthrough < fn + ctrl + alt + cmd - x ; default
+nopayload < fn + ctrl + alt + cmd - z ; default
+
+# quick relaunches and configs
+
+default, nopayload < fn + ctrl + alt + cmd - r : \
+    osascript -e 'display notification with title "Restarting Desktop Environment" subtitle "~ Finder, Dock, Übersicht, yabai, skhd."'; \
+    killall Finder; \
+    killall Dock; \
+    kill $(pgrep bersicht); \
+    sleep 3; \
+    launchctl kickstart -k "gui/${UID}/homebrew.mxcl.yabai"; \
+    open -a Übersicht; \
+    skhd -r
+
+default, nopayload < ctrl + alt + cmd - r : \
+    osascript -e 'display notification with title "Reloading Desktop Environment Configs" subtitle "reloading yabai and skhd config."'; \
+    source ~/.yabairc; \
+    skhd -r
+
+default, nopayload < ctrl + alt + cmd - p : yabai -m space --toggle padding; yabai -m space --toggle gap;
+
+# focus window
+default, nopayload < ctrl + alt - up    : yabai -m window --focus north
+default, nopayload < ctrl + alt - down  : yabai -m window --focus south
+default, nopayload < ctrl + alt - left  : yabai -m window --focus west
+default, nopayload < ctrl + alt - right : yabai -m window --focus east
+
+# equalize all windows
+default, nopayload < ctrl + alt - b : yabai -m space --balance
+
+# move window
+default, nopayload < ctrl + cmd - up    : yabai -m window --warp north
+default, nopayload < ctrl + cmd - down  : yabai -m window --warp south
+default, nopayload < ctrl + cmd - left  : yabai -m window --warp west
+default, nopayload < ctrl + cmd - right : yabai -m window --warp east
+
+# swap windows
+default, nopayload < shift + ctrl + cmd - up    : yabai -m window --swap north
+default, nopayload < shift + ctrl + cmd - down  : yabai -m window --swap south
+default, nopayload < shift + ctrl + cmd - left  : yabai -m window --swap west
+default, nopayload < shift + ctrl + cmd - right : yabai -m window --swap east
+
+# shift window size (tiled) or snap to left (float)
+default, nopayload < shift + ctrl + alt - left  : yabai -m window --ratio rel:-0.05 || yabai -m window --grid 1:2:0:0:1:1
+default, nopayload < shift + ctrl + alt - right : yabai -m window --ratio rel:+0.05 || yabai -m window --grid 1:2:1:0:1:1
+
+# insert area
+default, nopayload < ctrl + cmd - w : yabai -m window --insert north
+default, nopayload < ctrl + cmd - s : yabai -m window --insert south
+default, nopayload < ctrl + cmd - a : yabai -m window --insert west
+default, nopayload < ctrl + cmd - d : yabai -m window --insert east
+
+# space manipulation
+default, nopayload < ctrl + cmd - r : yabai -m space --rotate 270     #rotate 90° clockwise
+default, nopayload < ctrl + cmd - x : yabai -m space --mirror x-axis  #flip along x axis
+default, nopayload < ctrl + cmd - y : yabai -m space --mirror y-axis  #flip along y axis
+
+# toggle floating window
+default, nopayload < ctrl + cmd - f : yabai -m window --toggle float; skhd -k "shift + ctrl + alt - c"
+
+# center floating window
+default, nopayload < shift + ctrl + alt - c : yabai -m window --grid 8:8:1:1:6:6; skhd -k "ctrl + alt - c" #center and resize
+default, nopayload < ctrl + alt - c         : \
+    pos_x="$(bc -l <<< "$(yabai -m query --displays --display | jq '.frame.w/2') - $(yabai -m query --windows --window | jq '.frame.w/2')")"; \
+    pos_y="$(bc -l <<< "$(yabai -m query --displays --display | jq '.frame.h/2') - $(yabai -m query --windows --window | jq '.frame.h/2') + 10 ")"; \
+    yabai -m window --move abs:$pos_x:$pos_y;
+
+
+# corner floating window snapping
+default, nopayload < ctrl + alt - u : yabai -m window --grid 2:2:0:0:1:1 #top left
+default, nopayload < ctrl + alt - i : yabai -m window --grid 2:2:1:0:1:1 #top right
+default, nopayload < ctrl + alt - j : yabai -m window --grid 2:2:0:1:1:1 #bottom left
+default, nopayload < ctrl + alt - k : yabai -m window --grid 2:2:1:1:1:1 #bottom right
+
+# vertical sizes floating window snapping
+default, nopayload < ctrl + alt - d : yabai -m window --grid 1:3:0:0:1:1 #1/3 left
+default, nopayload < ctrl + alt - e : yabai -m window --grid 1:3:0:0:2:1 #2/3 left
+default, nopayload < ctrl + alt - f : yabai -m window --grid 1:3:1:0:1:1 #1/3 center
+default, nopayload < ctrl + alt - t : yabai -m window --grid 1:3:1:0:2:1 #2/3 right
+default, nopayload < ctrl + alt - g : yabai -m window --grid 1:3:2:0:1:1 #1/3 right
+
+# maximize floating or tiled window
+default, nopayload < ctrl + alt - m : yabai -m window --grid 1:1:0:0:1:1 || yabai -m window --toggle zoom-fullscreen #maximize
+
+# shortcuts
+default, nopayload < ctrl + cmd - t : \
+    osascript -e 'if application "iTerm" is not running then tell application "iTerm" to activate' && \
+    osascript -e 'tell application "iTerm" to create window with default profile'
+
+# switch to space
+ctrl - 1 : yabai -m space --focus  1
+ctrl - 2 : yabai -m space --focus  2
+ctrl - 3 : yabai -m space --focus  3
+ctrl - 4 : yabai -m space --focus  4
+ctrl - 5 : yabai -m space --focus  5
+ctrl - 6 : yabai -m space --focus  6
+ctrl - 7 : yabai -m space --focus  7
+ctrl - 8 : yabai -m space --focus  8
+ctrl - 9 : yabai -m space --focus  9
+ctrl - 0 : yabai -m space --focus 10
+shift + ctrl - 1 : yabai -m space --focus 11
+shift + ctrl - 2 : yabai -m space --focus 12
+shift + ctrl - 3 : yabai -m space --focus 13
+shift + ctrl - 4 : yabai -m space --focus 14
+shift + ctrl - 5 : yabai -m space --focus 15
+shift + ctrl - 6 : yabai -m space --focus 16
+shift + ctrl - 7 : yabai -m space --focus 17
+shift + ctrl - 8 : yabai -m space --focus 18
+shift + ctrl - 9 : yabai -m space --focus 19
+shift + ctrl - 0 : yabai -m space --focus 20
+shift + ctrl - left  : yabai -m space --focus prev
+shift + ctrl - right : yabai -m space --focus next
+
+# move window to space
+alt + ctrl - 1 : yabai -m window --space  1; yabai -m space --focus  1
+alt + ctrl - 2 : yabai -m window --space  2; yabai -m space --focus  2
+alt + ctrl - 3 : yabai -m window --space  3; yabai -m space --focus  3
+alt + ctrl - 4 : yabai -m window --space  4; yabai -m space --focus  4
+alt + ctrl - 5 : yabai -m window --space  5; yabai -m space --focus  5
+alt + ctrl - 6 : yabai -m window --space  6; yabai -m space --focus  6
+alt + ctrl - 7 : yabai -m window --space  7; yabai -m space --focus  7
+alt + ctrl - 8 : yabai -m window --space  8; yabai -m space --focus  8
+alt + ctrl - 9 : yabai -m window --space  9; yabai -m space --focus  9
+alt + ctrl - 0 : yabai -m window --space 10; yabai -m space --focus 10
+shift + alt + ctrl - 1 : yabai -m window --space 11; yabai -m space --focus 11
+shift + alt + ctrl - 2 : yabai -m window --space 12; yabai -m space --focus 12
+shift + alt + ctrl - 3 : yabai -m window --space 13; yabai -m space --focus 13
+shift + alt + ctrl - 4 : yabai -m window --space 14; yabai -m space --focus 14
+shift + alt + ctrl - 5 : yabai -m window --space 15; yabai -m space --focus 15
+shift + alt + ctrl - 6 : yabai -m window --space 16; yabai -m space --focus 16
+shift + alt + ctrl - 7 : yabai -m window --space 17; yabai -m space --focus 17
+shift + alt + ctrl - 8 : yabai -m window --space 18; yabai -m space --focus 18
+shift + alt + ctrl - 9 : yabai -m window --space 19; yabai -m space --focus 19
+shift + alt + ctrl - 0 : yabai -m window --space 20; yabai -m space --focus 20
+
+alt + ctrl - 0x2B : yabai -m window --space prev; yabai -m space --focus prev
+alt + ctrl - 0x2F : yabai -m window --space next; yabai -m space --focus next
+
+# create a new space
+alt + ctrl - 0x18 : \
+    yabai -m space --create; \
+    osascript -e "tell application \"Übersicht\" to refresh widget id \"miniyabar-spaces-primary-jsx\""; \
+    osascript -e "tell application \"Übersicht\" to refresh widget id \"miniyabar-spaces-secondary-jsx\"";
+
+# delete current space providing that said space isn't the first 8 spaces
+alt + ctrl - 0x1B : \
+    if [[ "$(yabai -m query --spaces | jq '[.[] | .focused ]' | jq '.[0:8]' | jq 'add')" == "0" ]]; then \
+        yabai -m space --destroy; \
+        osascript -e "tell application \"Übersicht\" to refresh widget id \"miniyabar-spaces-primary-jsx\""; \
+        osascript -e "tell application \"Übersicht\" to refresh widget id \"miniyabar-spaces-secondary-jsx\""; \
+    else \
+        osascript -e 'beep' \
+        osascript -e 'display notification with title "Locked Space" subtitle "This space cannot be deleted."'; \
+    fi
+
+
+# switch display focus
+ctrl + alt + cmd - 1 : yabai -m display --focus 1
+ctrl + alt + cmd - 2 : yabai -m display --focus 2
+ctrl + alt + cmd - 3 : yabai -m display --focus 3
+ctrl + alt + cmd - c : (yabai -m window --display next && yabai -m display --focus next) || \
+                       (yabai -m window --display 1 && yabai -m display --focus 1)
+
