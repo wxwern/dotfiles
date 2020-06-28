@@ -12,17 +12,20 @@ nopayload < fn + ctrl + alt + cmd - z ; default
 default, nopayload < fn + ctrl + alt + cmd - r : \
     osascript -e 'display notification with title "Restarting Desktop Environment" subtitle "~ Finder, Dock, Übersicht, yabai, skhd."'; \
     killall Finder; \
+    kill -9 $(pgrep bersicht); \
     killall Dock; \
-    kill $(pgrep bersicht); \
-    sleep 3; \
+    sleep 5; \
     launchctl kickstart -k "gui/${UID}/homebrew.mxcl.yabai"; \
-    open -a Übersicht; \
-    skhd -r
+    skhd -r; \
+    open /Applications/Übersicht;
 
 default, nopayload < ctrl + alt + cmd - r : \
-    osascript -e 'display notification with title "Reloading Desktop Environment Configs" subtitle "reloading yabai and skhd config."'; \
+    osascript -e 'display notification with title "Reloading Desktop Environment Configs" subtitle "yabai, skhd, Übersicht."'; \
+    kill -9 $(pgrep bersicht); \
     source ~/.yabairc; \
-    skhd -r
+    skhd -r; \
+    sleep 1; \
+    open /Applications/Übersicht;
 
 default, nopayload < ctrl + alt + cmd - p : yabai -m space --toggle padding; yabai -m space --toggle gap;
 
