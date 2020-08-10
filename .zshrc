@@ -99,6 +99,7 @@ export PATH=~/Repositories/c4ev3/c4ev3-gcc-2018-05-15.macOS/bin/:$PATH
 
 # Setting PATH for Python 3.8
 export PATH="/Library/Frameworks/Python.framework/Versions/3.8/bin:${PATH}"
+export PATH="/Users/LWJ/Library/Python/3.8/bin:${PATH}"
 
 # fastlane
 export PATH="$HOME/.fastlane/bin:$PATH"

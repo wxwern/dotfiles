@@ -27,13 +27,33 @@ default, nopayload < ctrl + alt + cmd - r : \
     sleep 1; \
     open /Applications/Übersicht;
 
-default, nopayload < ctrl + alt + cmd - p : yabai -m space --toggle padding; yabai -m space --toggle gap;
+
+# toggle yabai layout modes
+default, nopayload < fn + ctrl + alt - f : \
+    if [[ "$(yabai -m query --spaces --space | jq -r '.type')" == "bsp" ]]; then \
+        yabai -m space --layout float; \
+        osascript -e 'display notification with title "yabai layout for current space toggled" subtitle "currently: float"'; \
+    else \
+        yabai -m space --layout bsp; \
+        osascript -e 'display notification with title "yabai layout for current space toggled" subtitle "currently: bsp"'; \
+    fi;
+
+# toggle yabai padding
+default, nopayload < fn + ctrl + alt - p : yabai -m space --toggle padding; yabai -m space --toggle gap;
+
+# toggle window border
+default, nopayload < fn + ctrl - b : yabai -m window --toggle border;
+
+
+#
+# main operations
+#
 
 # focus window
 default, nopayload < ctrl + alt - up    : yabai -m window --focus north
 default, nopayload < ctrl + alt - down  : yabai -m window --focus south
-default, nopayload < ctrl + alt - left  : yabai -m window --focus west
-default, nopayload < ctrl + alt - right : yabai -m window --focus east
+default, nopayload < ctrl + alt - left  : yabai -m window --focus west  || yabai -m window --grid 1:2:0:0:1:1
+default, nopayload < ctrl + alt - right : yabai -m window --focus east  || yabai -m window --grid 1:2:1:0:1:1
 
 # equalize all windows
 default, nopayload < ctrl + alt - b : yabai -m space --balance
@@ -96,6 +116,12 @@ default, nopayload < ctrl + alt - m : yabai -m window --grid 1:1:0:0:1:1 || yaba
 default, nopayload < ctrl + cmd - t : \
     osascript -e 'if application "iTerm" is not running then tell application "iTerm" to activate' && \
     osascript -e 'tell application "iTerm" to create window with default profile'
+default, nopayload < fn - c: skhd -k "ctrl - f2"
+default, nopayload < fn - f: skhd -k "ctrl - f2"
+default, nopayload < fn - d: skhd -k "ctrl - f3"
+default, nopayload < fn - m: skhd -k "ctrl - f8"
+
+# window actions
 
 # switch to space
 ctrl - 1 : yabai -m space --focus  1
