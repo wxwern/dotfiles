@@ -17,7 +17,8 @@ default, nopayload < fn + ctrl + alt + cmd - r : \
     sleep 5; \
     launchctl kickstart -k "gui/${UID}/homebrew.mxcl.yabai"; \
     skhd -r; \
-    open /Applications/Übersicht;
+    open /Applications/Übersicht.app; \
+    osascript -e 'tell application id 'tracesof.Uebersicht' to activate';
 
 default, nopayload < ctrl + alt + cmd - r : \
     osascript -e 'display notification with title "Reloading Desktop Environment Configs" subtitle "yabai, skhd, Übersicht."'; \
@@ -25,7 +26,8 @@ default, nopayload < ctrl + alt + cmd - r : \
     source ~/.yabairc; \
     skhd -r; \
     sleep 1; \
-    open /Applications/Übersicht;
+    open /Applications/Übersicht.app; \
+    osascript -e 'tell application id 'tracesof.Uebersicht' to activate';
 
 
 # toggle yabai layout modes
@@ -43,6 +45,15 @@ default, nopayload < fn + ctrl + alt - p : yabai -m space --toggle padding; yaba
 
 # toggle window border
 default, nopayload < fn + ctrl - b : yabai -m window --toggle border;
+
+# toggle window sticky (useful for call windows etc)
+default, nopayload < fn + ctrl + cmd - f :
+    yabai -m window --toggle sticky; \
+    yabai -m window --move rel:-10:0;\
+    yabai -m window --move rel:10:10;\
+    yabai -m window --move rel:10:-10;\
+    yabai -m window --move rel:-10:-10;\
+    yabai -m window --move rel:0:10; \
 
 
 #
@@ -116,6 +127,9 @@ default, nopayload < ctrl + alt - m : yabai -m window --grid 1:1:0:0:1:1 || yaba
 default, nopayload < ctrl + cmd - t : \
     osascript -e 'if application "iTerm" is not running then tell application "iTerm" to activate' && \
     osascript -e 'tell application "iTerm" to create window with default profile'
+default, nopayload < fn + ctrl + cmd - t : \
+    osascript -e 'tell application "Finder" to make new Finder window'
+
 default, nopayload < fn - c: skhd -k "ctrl - f2"
 default, nopayload < fn - f: skhd -k "ctrl - f2"
 default, nopayload < fn - d: skhd -k "ctrl - f3"

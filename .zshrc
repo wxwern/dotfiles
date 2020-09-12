@@ -92,6 +92,7 @@ export ZSH_AUTOSUGGEST_COMPLETION_IGNORE="(rm|rmdir|sudo) *"
 export ANDROID_HOME=/Users/$USER/Library/Android/sdk
 export PATH=${PATH}:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
 export ANDROID_SDK=$HOME/Library/Android/sdk
+export ANDROID_NDK_HOME=$HOME/Library/Android/sdk/ndk/21.3.6528147/
 export PATH=$ANDROID_SDK/emulator:$ANDROID_SDK/tools:$PATH
 
 # c4ev3
