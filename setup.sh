@@ -13,7 +13,7 @@ echo "Running brew update and brew upgrade..."
 brew update
 brew upgrade
 
-print "Installing cli tools..."
+echo "Installing cli tools..."
 brew install \
     bash zsh fish \
     git wget tmux vim \
@@ -24,7 +24,7 @@ brew install \
     mas \
     coreutils findutils gnu-tar gnu-sed gawk gnutls gnu-indent gnu-getopt
 
-print "Installing gui tools..."
+echo "Installing gui tools..."
 brew cask install \
     iterm2 \
     visual-studio-code android-studio \
@@ -34,7 +34,7 @@ brew cask install \
     google-earth-pro
 
 
-print "Installing mac app store apps..."
+echo "Installing mac app store apps..."
 mas install 497799835  #Xcode
 mas install 1451685025 #Wireguard
 mas install 1147396723 #WhatsApp
@@ -48,7 +48,7 @@ mas install 462058435  #MS Excel
 mas install 462062816  #MS Powerpoint
 mas install 784801555  #MS OneNote
 
-print "Installing tiling window manager and custom bar..."
+echo "Installing tiling window manager and custom bar..."
 brew install \
     koekeishiya/formulae/yabai \
     koekeishiya/formulae/skhd
