@@ -1,16 +1,18 @@
-:: default : osascript -e 'display notification with title "skhd is active" subtitle "all keybindings mapped to yabai wm"'
-:: nopayload : osascript -e 'display notification with title "skhd is active" subtitle "nopayload keybindings mapped to yabai wm"'
-:: passthrough : osascript -e 'display notification with title "skhd is inactive" subtitle "all keybindings passed to active app"'
+:: default : terminal-notifier -title "skhd active" -subtitle "all keybindings mapped to yabai wm" -ignoreDnD
+:: nopayload : terminal-notifier -title "skhd partially active" -subtitle "using non-payload keybindings for yabai wm" -ignoreDnD
+:: passthrough : terminal-notifier -title "skhd inactive" -subtitle "all keybindings passed to foreground app" -ignoreDnD
 
 fn + ctrl + alt + cmd - z ; nopayload
 default, nopayload < fn + ctrl + alt + cmd - x ; passthrough
 passthrough < fn + ctrl + alt + cmd - x ; default
 nopayload < fn + ctrl + alt + cmd - z ; default
 
+#
 # quick relaunches and configs
+#
 
 default, nopayload < fn + ctrl + alt + cmd - r : \
-    osascript -e 'display notification with title "Restarting Desktop Environment" subtitle "~ Finder, Dock, Übersicht, yabai, skhd."'; \
+    terminal-notifier -title "Restarting Desktop Environment" -subtitle "~ Finder, Dock, Übersicht, yabai, skhd." -ignoreDnD; \
     killall Finder; \
     kill -9 $(pgrep bersicht); \
     killall Dock; \
@@ -21,7 +23,7 @@ default, nopayload < fn + ctrl + alt + cmd - r : \
     osascript -e 'tell application id 'tracesof.Uebersicht' to activate';
 
 default, nopayload < ctrl + alt + cmd - r : \
-    osascript -e 'display notification with title "Reloading Desktop Environment Configs" subtitle "yabai, skhd, Übersicht."'; \
+    terminal-notifier -title "Reloading Desktop Environment Configs" -subtitle "~ yabai, skhd, Übersicht." -ignoreDnD; \
     kill -9 $(pgrep bersicht); \
     source ~/.yabairc; \
     skhd -r; \
@@ -34,10 +36,10 @@ default, nopayload < ctrl + alt + cmd - r : \
 default, nopayload < fn + ctrl + alt - f : \
     if [[ "$(yabai -m query --spaces --space | jq -r '.type')" == "bsp" ]]; then \
         yabai -m space --layout float; \
-        osascript -e 'display notification with title "yabai layout for current space toggled" subtitle "currently: float"'; \
+        terminal-notifier -title "yabai layout for current space toggled" -subtitle "currently: float" -ignoreDnD; \
     else \
         yabai -m space --layout bsp; \
-        osascript -e 'display notification with title "yabai layout for current space toggled" subtitle "currently: bsp"'; \
+        terminal-notifier -title "yabai layout for current space toggled" -subtitle "currently: bsp" -ignoreDnD; \
     fi;
 
 # toggle yabai padding
@@ -47,14 +49,22 @@ default, nopayload < fn + ctrl + alt - p : yabai -m space --toggle padding; yaba
 default, nopayload < fn + ctrl - b : yabai -m window --toggle border;
 
 # toggle window sticky (useful for call windows etc)
+default, nopayload < shift + ctrl + cmd - f :
+    yabai -m window --toggle sticky; \
+    yabai -m window --toggle topmost; \
+    yabai -m window --toggle border; sleep 0.025; \
+    yabai -m window --toggle border;
 default, nopayload < fn + ctrl + cmd - f :
     yabai -m window --toggle sticky; \
-    yabai -m window --move rel:-10:0;\
-    yabai -m window --move rel:10:10;\
-    yabai -m window --move rel:10:-10;\
-    yabai -m window --move rel:-10:-10;\
-    yabai -m window --move rel:0:10; \
+    yabai -m window --toggle topmost; \
+    yabai -m window --toggle border; sleep 0.025; \
+    yabai -m window --toggle border;
 
+#
+# dummy notifications
+#
+
+default, nopayload < ctrl + shift + cmd - e -> : terminal-notifier -title "CPU turbo boost toggled" -ignoreDnD;
 
 #
 # main operations
@@ -95,6 +105,8 @@ default, nopayload < ctrl + cmd - d : yabai -m window --insert east
 default, nopayload < ctrl + cmd - r : yabai -m space --rotate 270     #rotate 90° clockwise
 default, nopayload < ctrl + cmd - x : yabai -m space --mirror x-axis  #flip along x axis
 default, nopayload < ctrl + cmd - y : yabai -m space --mirror y-axis  #flip along y axis
+default, nopayload < fn + ctrl + cmd - r : yabai -m window --toggle split #'rotate' windows that are in its parent tree
+default, nopayload < shift + ctrl + cmd - r : yabai -m window --toggle split #'rotate' windows that are in its parent tree
 
 # toggle floating window
 default, nopayload < ctrl + cmd - f : yabai -m window --toggle float; skhd -k "shift + ctrl + alt - c"
@@ -113,12 +125,23 @@ default, nopayload < ctrl + alt - i : yabai -m window --grid 2:2:1:0:1:1 #top ri
 default, nopayload < ctrl + alt - j : yabai -m window --grid 2:2:0:1:1:1 #bottom left
 default, nopayload < ctrl + alt - k : yabai -m window --grid 2:2:1:1:1:1 #bottom right
 
+# corner floating pip window snapping
+default, nopayload < shift + ctrl + alt - u : yabai -m window --grid 4:4:0:0:1:1 #top left
+default, nopayload < shift + ctrl + alt - i : yabai -m window --grid 4:4:3:0:1:1 #top right
+default, nopayload < shift + ctrl + alt - j : yabai -m window --grid 4:4:0:3:1:1 #bottom left
+default, nopayload < shift + ctrl + alt - k : yabai -m window --grid 4:4:3:3:1:1 #bottom right
+default, nopayload < fn + ctrl + alt - u : yabai -m window --grid 4:4:0:0:1:1 #top left
+default, nopayload < fn + ctrl + alt - i : yabai -m window --grid 4:4:3:0:1:1 #top right
+default, nopayload < fn + ctrl + alt - j : yabai -m window --grid 4:4:0:3:1:1 #bottom left
+default, nopayload < fn + ctrl + alt - k : yabai -m window --grid 4:4:3:3:1:1 #bottom right
+
 # vertical sizes floating window snapping
 default, nopayload < ctrl + alt - d : yabai -m window --grid 1:3:0:0:1:1 #1/3 left
 default, nopayload < ctrl + alt - e : yabai -m window --grid 1:3:0:0:2:1 #2/3 left
 default, nopayload < ctrl + alt - f : yabai -m window --grid 1:3:1:0:1:1 #1/3 center
-default, nopayload < ctrl + alt - t : yabai -m window --grid 1:3:1:0:2:1 #2/3 right
+default, nopayload < ctrl + alt - r : yabai -m window --grid 1:6:1:0:4:1 #2/3 center
 default, nopayload < ctrl + alt - g : yabai -m window --grid 1:3:2:0:1:1 #1/3 right
+default, nopayload < ctrl + alt - t : yabai -m window --grid 1:3:1:0:2:1 #2/3 right
 
 # maximize floating or tiled window
 default, nopayload < ctrl + alt - m : yabai -m window --grid 1:1:0:0:1:1 || yabai -m window --toggle zoom-fullscreen #maximize
@@ -127,8 +150,9 @@ default, nopayload < ctrl + alt - m : yabai -m window --grid 1:1:0:0:1:1 || yaba
 default, nopayload < ctrl + cmd - t : \
     osascript -e 'if application "iTerm" is not running then tell application "iTerm" to activate' && \
     osascript -e 'tell application "iTerm" to create window with default profile'
-default, nopayload < fn + ctrl + cmd - t : \
-    osascript -e 'tell application "Finder" to make new Finder window'
+default, nopayload < shift + ctrl + cmd - t : \
+    osascript -e 'tell application "Finder" to make new Finder window to folder "Macintosh HD:Users:LWJ:"' && \
+    osascript -e 'tell application "Finder" to activate'
 
 default, nopayload < fn - c: skhd -k "ctrl - f2"
 default, nopayload < fn - f: skhd -k "ctrl - f2"
@@ -192,15 +216,15 @@ alt + ctrl - 0x18 : \
     osascript -e "tell application \"Übersicht\" to refresh widget id \"miniyabar-spaces-primary-jsx\""; \
     osascript -e "tell application \"Übersicht\" to refresh widget id \"miniyabar-spaces-secondary-jsx\"";
 
-# delete current space providing that said space isn't the first 8 spaces
+# delete current space providing that said space isn't the first 9 spaces
 alt + ctrl - 0x1B : \
-    if [[ "$(yabai -m query --spaces | jq '[.[] | .focused ]' | jq '.[0:8]' | jq 'add')" == "0" ]]; then \
+    if [[ "$(yabai -m query --spaces | jq '[.[] | .focused ]' | jq '.[0:9]' | jq 'add')" == "0" ]]; then \
         yabai -m space --destroy; \
         osascript -e "tell application \"Übersicht\" to refresh widget id \"miniyabar-spaces-primary-jsx\""; \
         osascript -e "tell application \"Übersicht\" to refresh widget id \"miniyabar-spaces-secondary-jsx\""; \
     else \
-        osascript -e 'beep' \
-        osascript -e 'display notification with title "Locked Space" subtitle "This space cannot be deleted."'; \
+        terminal-notifier -title "Locked Space" -subtitle "This space cannot be deleted." -ignoreDnD; \
+        osascript -e 'beep'; \
     fi
 
 
@@ -210,4 +234,8 @@ ctrl + alt + cmd - 2 : yabai -m display --focus 2
 ctrl + alt + cmd - 3 : yabai -m display --focus 3
 ctrl + alt + cmd - c : (yabai -m window --display next && yabai -m display --focus next) || \
                        (yabai -m window --display 1 && yabai -m display --focus 1)
+ctrl + alt + shift - 0x2B : (yabai -m window --display next && yabai -m display --focus next) || \
+                          (yabai -m window --display 1 && yabai -m display --focus 1)
+ctrl + alt + shift - 0x2F : (yabai -m window --display next && yabai -m display --focus next) || \
+                          (yabai -m window --display 1 && yabai -m display --focus 1)
 

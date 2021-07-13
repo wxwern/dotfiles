@@ -49,4 +49,5 @@ echo && neofetch --logo #neofetch --disable term
 
 #custom stuff
 export PATH=$HOME/bin:$PATH
+source ~/bin/pwdt
 source ~/bin/hoard

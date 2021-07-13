@@ -18,6 +18,15 @@ let g:ale_python_pylint_options = '--rcfile=/Users/LWJ/.pylintrc'
 let g:ale_echo_msg_format = '[%severity%] %linter%: %s'
 let g:airline#extensions#ale#enabled = 1
 
+if has('nvim')
+  Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+else
+  Plug 'Shougo/deoplete.nvim'
+  Plug 'roxma/nvim-yarp'
+  Plug 'roxma/vim-hug-neovim-rpc'
+endif
+let g:deoplete#enable_at_startup   = 1
+let g:omni_sql_no_default_maps = 1
 
 call plug#end()
 
@@ -27,6 +36,7 @@ set ruler
 set mouse=a
 set encoding=utf-8
 set termencoding=utf-8
+set hlsearch
 syntax on
 
 if &t_Co == 8 && $TERM !~# '^Eterm'
@@ -47,6 +57,13 @@ set tabstop=4     " show existing tab with 4 spaces width
 set shiftwidth=4  " when indenting with '>', use 4 spaces width
 set softtabstop=4 " Sets the number of columns for a TAB.
 set expandtab     " expand tBs
+
+function SetTabWidth(n)
+    exe 'set tabstop='.a:n
+    exe 'set shiftwidth='.a:n
+    exe 'set softtabstop='.a:n
+    set expandtab
+endfunction
 
 " line number formatting
 set number relativenumber

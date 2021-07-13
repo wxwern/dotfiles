@@ -114,6 +114,9 @@ export PATH="$HOME/.fastlane/bin:$PATH"
 # homebrew config
 export HOMEBREW_NO_AUTO_UPDATE=1
 
+# force macos 11 reporting
+export SYSTEM_VERSION_COMPAT=0
+
 # colors!!!!
 export CLICOLOR=1
 export TERM="xterm-color"
@@ -122,9 +125,9 @@ export TERM="xterm-color"
 # export ARCHFLAGS="-arch x86_64"
 
 prompt_context() {
-  if [[ "$USER" != "$DEFAULT_USER" || -n "$SSH_CLIENT" ]]; then
-    prompt_segment black default "%(!.%{%F{yellow}%}.)$USER"
-  fi
+    if [[ "$USER" != "$DEFAULT_USER" || -n "$SSH_CLIENT" ]]; then
+        prompt_segment black default "%(!.%{%F{yellow}%}.)$USER"
+    fi
 }
 
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
@@ -133,26 +136,35 @@ prompt_context() {
 # For a full list of active aliases, run `alias`.
 
 alias tetris="autoload -Uz tetriscurses && tetriscurses"
-alias python='python3'
-alias pip='pip3'
-alias ssh='~/Repositories/external/ssh-ident/ssh-ident'
-alias kali-vm='((VBoxManage list runningvms | grep Kali >> /dev/null) || (echo "Starting VM..." && VBoxManage startvm Kali && echo "Waiting for system to be ready..." && sleep 30 && echo "Connecting via SSH...")) && ssh lwj@kali-vm.local'
-alias ubuntu-vm='((VBoxManage list runningvms | grep Ubuntu >> /dev/null) || (echo "Starting VM..." && VBoxManage startvm Ubuntu && echo "Waiting for system to be ready..." && sleep 30 && echo "Connecting via SSH...")) && ssh lwj@ubuntu-vm.local'
+#alias ssh='~/Repositories/external/ssh-ident/ssh-ident'
+alias kali-vm='(echo "Starting VM..." && vmrun -T fusion start "/Users/LWJ/Documents/VMWare/Kali.vmwarevm" nogui && echo "Connecting via SSH...") && ssh lwj@kali-vm.local'
+alias ubuntu-vm='(echo "Starting VM..." && vmrun -T fusion start "/Users/LWJ/Documents/VMWare/Ubuntu.vmwarevm" nogui && echo "Connecting via SSH...") && ssh lwj@ubuntu-vm.local'
 alias ev3='~/Repositories/internal/c4ev3/ev3duder/ev3duder'
 alias ev3upload='~/Repositories/internal/c4ev3/scripts/ev3upload'
 alias ev3build='~/Repositories/internal/c4ev3/scripts/ev3build'
 alias ev3buildUpload='~/Repositories/internal/c4ev3/scripts/ev3buildUpload'
+alias mcmodvchange="'/Users/LWJ/Library/Application Support/minecraft/mods_change.sh'"
+alias xcSimStatusOverride='xcrun simctl status_bar booted override --time "9:41 AM" --batteryState charged --batteryLevel 100 --wifiMode active --wifiBars 3 --cellularMode active --cellularBars 4 --operatorName ""'
+proctorScreenRec() {
+    ffmpeg -f avfoundation -r 1 -probesize 20M -threads 1 -i "$(ffmpeg -f avfoundation -list_devices true -i "" 2>&1 | grep "Capture screen" | cut -d ' ' -f 5 | cut -c 2):" -vcodec libx264 -b:v 128k -s hd1080 ~/Desktop/proctor_screenrec_$(date +"%Y%m%d_%H%M%S").mp4
+}
+ctf() {
+    alias ls='ls -lGaf'
+    PATH=$HOME/CTF/Tools/bin:$PATH
+    cd ~/CTF
+}
 alias ll='ls -lGaf'
 
 # zsh ignore spaces
 setopt histignorespace
 
-# print os logo
+# print login logo
 if [[ -o login ]]; then
     echo && neofetch --logo
 fi
 
-# hoard config
+# sourced configs
+source ~/bin/pwdt
 source ~/bin/hoard
 
 #export PATH="/usr/local/opt/zip/bin:$PATH"
