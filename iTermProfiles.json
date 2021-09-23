@@ -1,6 +1,13 @@
 {
 "Profiles": [
 {
+  "Ansi 5 Color" : {
+    "Red Component" : 1,
+    "Color Space" : "sRGB",
+    "Blue Component" : 0.49433413147926331,
+    "Alpha Component" : 1,
+    "Green Component" : 0.2334747314453125
+  },
   "Working Directory" : "\/Users\/LWJ",
   "Prompt Before Closing 2" : 2,
   "Selected Text Color" : {
@@ -267,7 +274,6 @@
     "Green Component" : 0.80897921323776245
   },
   "Icon" : 0,
-  "Use Non-ASCII Font" : false,
   "Link Color" : {
     "Red Component" : 0.13333333333333333,
     "Color Space" : "sRGB",
@@ -275,6 +281,7 @@
     "Alpha Component" : 1,
     "Green Component" : 0.66666666666666663
   },
+  "Use Non-ASCII Font" : false,
   "Shortcut" : "C",
   "Bold Color" : {
     "Red Component" : 1,
@@ -552,7 +559,7 @@
   },
   "Session Close Undo Timeout" : 10,
   "Blur" : true,
-  "Normal Font" : "Menlo-Bold 12",
+  "Normal Font" : "MesloLGMNerdFontCompleteM-Bold 11",
   "Vertical Spacing" : 1,
   "Ansi 7 Color" : {
     "Red Component" : 1,
@@ -615,17 +622,18 @@
 
   ],
   "Visual Bell" : true,
+  "ASCII Ligatures" : false,
   "Send Idle Alert" : false,
-  "Custom Directory" : "No",
+  "Custom Directory" : "No"
+},
+{
   "Ansi 5 Color" : {
     "Red Component" : 1,
     "Color Space" : "sRGB",
     "Blue Component" : 0.49433413147926331,
     "Alpha Component" : 1,
     "Green Component" : 0.2334747314453125
-  }
-},
-{
+  },
   "Working Directory" : "\/Users\/LWJ",
   "Prompt Before Closing 2" : 2,
   "Selected Text Color" : {
@@ -1168,7 +1176,7 @@
   },
   "Session Close Undo Timeout" : 10,
   "Blur" : true,
-  "Normal Font" : "Menlo-Bold 12",
+  "Normal Font" : "MesloLGMNerdFontCompleteM-Bold 11",
   "Vertical Spacing" : 1,
   "Ansi 7 Color" : {
     "Red Component" : 1,
@@ -1223,17 +1231,18 @@
   "Columns" : 100,
   "Unicode Normalization" : 0,
   "Visual Bell" : true,
+  "ASCII Ligatures" : false,
   "Send Idle Alert" : false,
-  "Custom Directory" : "No",
+  "Custom Directory" : "No"
+},
+{
   "Ansi 5 Color" : {
     "Red Component" : 1,
     "Color Space" : "sRGB",
     "Blue Component" : 0.49433413147926331,
     "Alpha Component" : 1,
     "Green Component" : 0.2334747314453125
-  }
-},
-{
+  },
   "Working Directory" : "\/Users\/LWJ",
   "Prompt Before Closing 2" : 2,
   "Selected Text Color" : {
@@ -1777,7 +1786,7 @@
   },
   "Session Close Undo Timeout" : 10,
   "Blur" : true,
-  "Normal Font" : "Menlo-Bold 12",
+  "Normal Font" : "MesloLGMNerdFontCompleteM-Bold 11",
   "Vertical Spacing" : 1,
   "Ansi 7 Color" : {
     "Red Component" : 1,
@@ -1831,17 +1840,18 @@
   "Columns" : 100,
   "Unicode Normalization" : 0,
   "Visual Bell" : true,
+  "ASCII Ligatures" : false,
   "Send Idle Alert" : false,
-  "Custom Directory" : "No",
+  "Custom Directory" : "No"
+},
+{
   "Ansi 5 Color" : {
     "Red Component" : 1,
     "Color Space" : "sRGB",
     "Blue Component" : 0.49433413147926331,
     "Alpha Component" : 1,
     "Green Component" : 0.2334747314453125
-  }
-},
-{
+  },
   "Working Directory" : "\/Users\/LWJ",
   "Prompt Before Closing 2" : 2,
   "Selected Text Color" : {
@@ -2045,7 +2055,6 @@
     "Green Component" : 0.80897921323776245
   },
   "Icon" : 0,
-  "Use Non-ASCII Font" : false,
   "Link Color" : {
     "Red Component" : 0.13333333333333333,
     "Color Space" : "sRGB",
@@ -2053,6 +2062,7 @@
     "Alpha Component" : 1,
     "Green Component" : 0.66666666666666663
   },
+  "Use Non-ASCII Font" : false,
   "Shortcut" : "I",
   "Bold Color" : {
     "Red Component" : 1,
@@ -2329,7 +2339,7 @@
   },
   "Session Close Undo Timeout" : 10,
   "Blur" : true,
-  "Normal Font" : "Menlo-Bold 12",
+  "Normal Font" : "MesloLGMNerdFontCompleteM-Bold 11",
   "Vertical Spacing" : 1,
   "Ansi 7 Color" : {
     "Red Component" : 1,
@@ -2392,15 +2402,9 @@
 
   ],
   "Visual Bell" : true,
+  "ASCII Ligatures" : false,
   "Send Idle Alert" : false,
-  "Custom Directory" : "No",
-  "Ansi 5 Color" : {
-    "Red Component" : 1,
-    "Color Space" : "sRGB",
-    "Blue Component" : 0.49433413147926331,
-    "Alpha Component" : 1,
-    "Green Component" : 0.2334747314453125
-  }
+  "Custom Directory" : "No"
 }
 ]
 }
