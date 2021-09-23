@@ -1,17 +1,19 @@
+" tab formatting
+set tabstop=4
+set shiftwidth=4
+set softtabstop=4
+set expandtab
+
+" configure plugins
+set nocompatible
 call plug#begin('~/.vim/plugged')
 
 Plug 'sheerun/vim-polyglot'
-Plug 'vim-airline/vim-airline'
-Plug 'vim-airline/vim-airline-themes'
-let g:airline_powerline_fonts = 1
-let g:airline#extensions#tabline#enabled = 1
-let g:airline#extensions#tabline#left_sep = ' '
-let g:airline#extensions#tabline#left_alt_sep = '|'
-let g:airline#extensions#tabline#formatter = 'unique_tail_improved'
+let g:polyglot_disabled = ['sensible']
 
 Plug 'dense-analysis/ale'
-let g:ale_c_gcc_executable = 'gcc-9'
-let g:ale_cpp_gcc_executable = 'gcc-9'
+let g:ale_c_gcc_executable = 'gcc-11'
+let g:ale_cpp_gcc_executable = 'gcc-11'
 let g:ale_echo_msg_error_str = 'ERR'
 let g:ale_echo_msg_warning_str = 'WARN'
 let g:ale_python_pylint_options = '--rcfile=/Users/LWJ/.pylintrc'
@@ -28,8 +30,19 @@ endif
 let g:deoplete#enable_at_startup   = 1
 let g:omni_sql_no_default_maps = 1
 
-call plug#end()
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+let g:airline_powerline_fonts = 1
+let g:airline#extensions#tabline#enabled = 1
+let g:airline#extensions#tabline#left_sep = ' '
+let g:airline#extensions#tabline#left_alt_sep = '|'
+let g:airline#extensions#tabline#formatter = 'unique_tail_improved'
+Plug 'tomasiser/vim-code-dark'
+let g:airline_theme = 'codedark'
 
+Plug 'farmergreg/vim-lastplace'
+
+call plug#end()
 
 set number
 set ruler
@@ -43,7 +56,6 @@ if &t_Co == 8 && $TERM !~# '^Eterm'
     set t_Co=16
 endif
 
-" Only do this part when compiled with support for autocommands.
 if has("autocmd")
     " Use filetype detection and file-based automatic indenting.
     filetype plugin indent on
@@ -51,12 +63,6 @@ if has("autocmd")
     " Use actual tab chars in Makefiles.
     autocmd FileType make set tabstop=8 shiftwidth=8 softtabstop=0 noexpandtab
 endif
-
-" tab formatting
-set tabstop=4     " show existing tab with 4 spaces width
-set shiftwidth=4  " when indenting with '>', use 4 spaces width
-set softtabstop=4 " Sets the number of columns for a TAB.
-set expandtab     " expand tBs
 
 function SetTabWidth(n)
     exe 'set tabstop='.a:n
@@ -67,11 +73,11 @@ endfunction
 
 " line number formatting
 set number relativenumber
-"augroup numbertoggle
-"  autocmd!
-"  autocmd BufEnter,FocusGained,InsertLeave * set relativenumber
-"  autocmd BufLeave,FocusLost,InsertEnter   * set norelativenumber
-"augroup END
+augroup numbertoggle
+  autocmd!
+  autocmd BufEnter,FocusGained,InsertLeave * set relativenumber
+  autocmd BufLeave,FocusLost,InsertEnter   * set norelativenumber
+augroup END
 
 
 " key remaps
@@ -87,6 +93,9 @@ autocmd ColorScheme * highlight ExtraWhitespace ctermbg=darkred guibg=darkred
 highlight ExtraWhitespace ctermbg=darkred guibg=darkred 
 autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
 
+" session
+set ssop-=options    " do not store global and local values in a session
+
 " other vim config
 set autoread  "auto read files updated from externally
 set showmatch "show matching brackets when cursor is over one
@@ -95,7 +104,7 @@ set clipboard=unnamed          "clipboard sync
 set backspace=indent,eol,start "make backspace work
 set t_Co=256                   "set colours
 set term=xterm-256color        "set colours
-set nocompatible
+set cursorline
 set history=1000
 set tabpagemax=50
 set display+=lastline
@@ -103,4 +112,7 @@ set scrolloff=1
 set fillchars+=stl:\ ,stlnc:\
 
 "set the color scheme at the end
-colorscheme abstract
+colorscheme codedark
+autocmd vimenter * hi EndOfBuffer ctermbg=none
+autocmd vimenter * hi Normal guibg=NONE ctermbg=NONE
+

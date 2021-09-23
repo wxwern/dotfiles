@@ -57,7 +57,7 @@ COMPLETION_WAITING_DOTS="true"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git python osx zsh-autosuggestions) #zsh-syntax-highlighting)
+plugins=(git python osx zsh-autosuggestions zsh-syntax-highlighting)
 
 # Source oh my zsh
 source $ZSH/oh-my-zsh.sh
@@ -78,11 +78,11 @@ export ZSH_AUTOSUGGEST_HISTORY_IGNORE="(?(#c50,)|(cd|rm|rmdir|sudo|git) *)"
 export ZSH_AUTOSUGGEST_COMPLETION_IGNORE="(rm|rmdir|sudo) *"
 
 # Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
-#   export EDITOR='vim'
-# else
-#   export EDITOR='mvim'
-# fi
+if [[ -n $SSH_CONNECTION ]]; then
+  export EDITOR='vim'
+else
+  export EDITOR='vim'
+fi
 
 #replace macos utils with gnu utils
 #export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
@@ -161,6 +161,14 @@ setopt histignorespace
 # print login logo
 if [[ -o login ]]; then
     echo && neofetch --logo
+    # brew upgrade reminders
+    echo "$(cat ~/tmp/brew_outdated_motd.txt)"
+    brew() {
+        /usr/local/bin/brew "$@"
+        if [[ "$1" == "upgrade" || "$1" == "outdated" ]]; then
+            Scripts/updateBrewOutdated
+        fi
+    }
 fi
 
 # sourced configs
