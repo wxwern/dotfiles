@@ -26,12 +26,7 @@ set display+=lastline
 set scrolloff=1
 set fillchars+=stl:\ ,stlnc:\
 if &t_Co == 8 && $TERM !~# '^Eterm'
-    set t_Co=16
-endif
-
-" auto install vim-plug if not present
-if empty(glob("~/.vim/autoload/plug.vim"))
-  execute '!mkdir ~/.vim/autoload && wget -O ~/.vim/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+  set t_Co=16
 endif
 
 " configure vim-plug plugins
@@ -95,8 +90,8 @@ call plug#begin('~/.vim/plugged')
   map g/ <Plug>(incsearch-stay)
 
   Plug 'preservim/nerdtree' |
-              \ Plug 'Xuyuanp/nerdtree-git-plugin' |
-              \ Plug 'ryanoasis/vim-devicons'
+        \ Plug 'Xuyuanp/nerdtree-git-plugin' |
+        \ Plug 'ryanoasis/vim-devicons'
 
   " Start NERDTree, unless a file or session is specified.
   autocmd StdinReadPre * let s:std_in=1
@@ -111,9 +106,10 @@ call plug#begin('~/.vim/plugged')
   nnoremap <C-n> :NERDTreeMirror<CR>:NERDTreeFocus<CR>
   nnoremap <C-t> :NERDTreeMirror<CR>:NERDTreeToggle<CR>
   " NERDTree always open in tab
-  let NERDTreeCustomOpenArgs={'file':{'where': 't', 'reuse': 'all', 'keepopen': 1, 'stay': 0}}
+  let NERDTreeCustomOpenArgs={'file':{'where': 't', 'reuse': bufname("%") == "" ? 'currenttab': 'all', 'keepopen': 1, 'stay': 0}}
 
 call plug#end()
+
 
 " line number formatting depending on input modes
 set number relativenumber
@@ -128,10 +124,10 @@ autocmd FileType make set tabstop=8 shiftwidth=8 softtabstop=0 noexpandtab
 
 " helper tab width as spaces count (does not auto reindent)
 function SetTabWidth(n)
-    exe 'set tabstop='.a:n
-    exe 'set shiftwidth='.a:n
-    exe 'set softtabstop='.a:n
-    set expandtab
+  exe 'set tabstop='.a:n
+  exe 'set shiftwidth='.a:n
+  exe 'set softtabstop='.a:n
+  set expandtab
 endfunction
 
 " reindent entire document, jump back to previous position

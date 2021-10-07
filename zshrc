@@ -73,7 +73,7 @@ export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#606060"
 export ZSH_AUTOSUGGEST_STRATEGY=(match_prev_cmd completion)
 export ZSH_AUTOSUGGEST_USE_ASYNC=1
 export ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
-export ZSH_AUTOSUGGEST_HISTORY_IGNORE="(?(#c50,)|(cd|rm|rmdir|sudo|git) *)"
+export ZSH_AUTOSUGGEST_HISTORY_IGNORE="(?(#c50,)|(cd|rm|rmdir|sudo|git|vim) *)"
 export ZSH_AUTOSUGGEST_COMPLETION_IGNORE="(rm|rmdir|sudo) *"
 
 # Preferred editor for local and remote sessions
@@ -98,8 +98,8 @@ export PATH=$ANDROID_SDK/emulator:$ANDROID_SDK/tools:$PATH
 export PATH=~/Repositories/c4ev3/c4ev3-gcc-2018-05-15.macOS/bin/:$PATH
 
 # Setting PATH for Python 3.8
-export PATH="/Library/Frameworks/Python.framework/Versions/3.8/bin:${PATH}"
-export PATH="/Users/LWJ/Library/Python/3.8/bin:${PATH}"
+export PATH="/Library/Frameworks/Python.framework/Versions/3.9/bin:${PATH}"
+export PATH="/Users/LWJ/Library/Python/3.9/bin:${PATH}"
 
 # fastlane
 export PATH="$HOME/.fastlane/bin:$PATH"
