@@ -2,10 +2,10 @@
 :: nopayload : terminal-notifier -title "skhd partially active" -subtitle "using non-payload keybindings for yabai wm" -ignoreDnD
 :: passthrough : terminal-notifier -title "skhd inactive" -subtitle "all keybindings passed to foreground app" -ignoreDnD
 
-fn + ctrl + alt + cmd - z ; nopayload
+fn + ctrl + alt + cmd - p ; nopayload
 default, nopayload < fn + ctrl + alt + cmd - x ; passthrough
 passthrough < fn + ctrl + alt + cmd - x ; default
-nopayload < fn + ctrl + alt + cmd - z ; default
+nopayload < fn + ctrl + alt + cmd - p ; default
 
 #
 # quick relaunches and configs

@@ -104,6 +104,9 @@ export PATH="/Users/LWJ/Library/Python/3.9/bin:${PATH}"
 # fastlane
 export PATH="$HOME/.fastlane/bin:$PATH"
 
+# golang
+export PATH="$HOME/go/bin:$PATH"
+
 # ruby from homebrew
 #export PATH="/usr/local/opt/ruby/bin:$PATH"
 #export LDFLAGS="-L/usr/local/opt/ruby/lib"
