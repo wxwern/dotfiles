@@ -8,7 +8,7 @@ export ZSH="/Users/LWJ/.oh-my-zsh"
 # load a random theme each time oh-my-zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="agnoster"
+ZSH_THEME="agnoster-lwj"
 
 # Uncomment the following line to use case-sensitive completion.
 # CASE_SENSITIVE="true"
@@ -18,10 +18,10 @@ ZSH_THEME="agnoster"
 HYPHEN_INSENSITIVE="true"
 
 # Uncomment the following line to automatically update without prompting.
-DISABLE_UPDATE_PROMPT="true"
+DISABLE_UPDATE_PROMPT="false"
 
 # Uncomment the following line to change how often to auto-update (in days).
-# export UPDATE_ZSH_DAYS=13
+export UPDATE_ZSH_DAYS=7
 
 # Uncomment the following line if pasting URLs and other text is messed up.
 # DISABLE_MAGIC_FUNCTIONS=true
@@ -56,7 +56,7 @@ COMPLETION_WAITING_DOTS="true"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git python osx zsh-autosuggestions zsh-syntax-highlighting)
+plugins=(git python macos zsh-autosuggestions zsh-syntax-highlighting)
 
 # Source oh my zsh
 source $ZSH/oh-my-zsh.sh
@@ -73,7 +73,7 @@ export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#606060"
 export ZSH_AUTOSUGGEST_STRATEGY=(match_prev_cmd completion)
 export ZSH_AUTOSUGGEST_USE_ASYNC=1
 export ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
-export ZSH_AUTOSUGGEST_HISTORY_IGNORE="(?(#c50,)|(cd|rm|rmdir|sudo|git|vim) *)"
+export ZSH_AUTOSUGGEST_HISTORY_IGNORE="(?(#c50,)|(cd|rm|rmdir|sudo|git commit -m|vim|nvim) *)"
 export ZSH_AUTOSUGGEST_COMPLETION_IGNORE="(rm|rmdir|sudo) *"
 
 # Preferred editor for local and remote sessions
@@ -86,6 +86,13 @@ fi
 #replace macos utils with gnu utils
 #export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
 #export PATH="/usr/local/opt/cross/arm-linux:$PATH"
+
+# include linux utils
+export PATH="/usr/local/opt/util-linux/bin:$PATH"
+export PATH="/usr/local/opt/util-linux/sbin:$PATH"
+export LDFLAGS="-L/usr/local/opt/util-linux/lib"
+export CPPFLAGS="-I/usr/local/opt/util-linux/include"
+export PKG_CONFIG_PATH="/usr/local/opt/util-linux/lib/pkgconfig"
 
 # android
 export ANDROID_HOME=/Users/$USER/Library/Android/sdk
@@ -103,6 +110,9 @@ export PATH="/Users/LWJ/Library/Python/3.9/bin:${PATH}"
 
 # fastlane
 export PATH="$HOME/.fastlane/bin:$PATH"
+
+# fzf
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 # golang
 export PATH="$HOME/go/bin:$PATH"
@@ -137,6 +147,7 @@ prompt_context() {
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
 # For a full list of active aliases, run `alias`.
 
+alias vim="nvim" # use nvim instead of vim, old habits die hard
 alias tetris="autoload -Uz tetriscurses && tetriscurses"
 #alias ssh='~/Repositories/external/ssh-ident/ssh-ident'
 alias kali-vm='(echo "Starting VM..." && vmrun -T fusion start "/Users/LWJ/Documents/VMWare/Kali.vmwarevm" nogui && echo "Connecting via SSH...") && ssh lwj@kali-vm.local'
@@ -162,13 +173,15 @@ setopt histignorespace
 
 # print login logo
 if [[ -o login ]]; then
-    echo && neofetch --logo
     # brew upgrade reminders
-    echo "$(cat ~/tmp/brew_outdated_motd.txt)"
+    outdated_motd="$(cat ~/tmp/brew_outdated_motd.txt)"
+    if [[ -n "$outdated_motd" ]]; then
+        echo "$outdated_motd"
+    fi
     brew() {
         /usr/local/bin/brew "$@"
         if [[ "$1" == "upgrade" || "$1" == "outdated" ]]; then
-            Scripts/updateBrewOutdated
+            ~/Scripts/updateBrewOutdated
         fi
     }
 fi
@@ -179,3 +192,4 @@ source ~/bin/hoard
 
 #export PATH="/usr/local/opt/zip/bin:$PATH"
 #export PATH="/usr/local/opt/unzip/bin:$PATH"
+

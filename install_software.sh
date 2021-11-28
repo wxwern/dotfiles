@@ -33,7 +33,6 @@ brew cask install \
     vnc-viewer vnc-server virtualbox \
     google-earth-pro
 
-
 echo "Installing mac app store apps..."
 mas install 497799835  #Xcode
 mas install 1451685025 #Wireguard
@@ -53,6 +52,9 @@ brew install \
     koekeishiya/formulae/yabai \
     koekeishiya/formulae/skhd
 brew cask install ubersicht
+
+echo "Installing oh-my-zsh..."
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 
 echo
 echo "Automated installations are done!"
