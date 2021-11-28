@@ -1,6 +1,6 @@
-:: default : terminal-notifier -title "skhd active" -subtitle "all keybindings mapped to yabai wm" -ignoreDnD
-:: nopayload : terminal-notifier -title "skhd partially active" -subtitle "using non-payload keybindings for yabai wm" -ignoreDnD
-:: passthrough : terminal-notifier -title "skhd inactive" -subtitle "all keybindings passed to foreground app" -ignoreDnD
+:: default : terminal-notifier -title "skhd active" -message "all keybindings mapped to yabai wm" -ignoreDnD
+:: nopayload : terminal-notifier -title "skhd partially active" -message "using non-payload keybindings for yabai wm" -ignoreDnD
+:: passthrough : terminal-notifier -title "skhd inactive" -message "all keybindings passed to foreground app" -ignoreDnD
 
 fn + ctrl + alt + cmd - p ; nopayload
 default, nopayload < fn + ctrl + alt + cmd - x ; passthrough
@@ -12,7 +12,7 @@ nopayload < fn + ctrl + alt + cmd - p ; default
 #
 
 default, nopayload < fn + ctrl + alt + cmd - r : \
-    terminal-notifier -title "Restarting Desktop Environment" -subtitle "~ Finder, Dock, Übersicht, yabai, skhd." -ignoreDnD; \
+    terminal-notifier -title "Restarting Desktop Environment" -message "~ Finder, Dock, Übersicht, yabai, skhd." -ignoreDnD; \
     killall Finder; \
     kill -9 $(pgrep bersicht); \
     killall Dock; \
@@ -23,7 +23,7 @@ default, nopayload < fn + ctrl + alt + cmd - r : \
     osascript -e 'tell application id 'tracesof.Uebersicht' to activate';
 
 default, nopayload < ctrl + alt + cmd - r : \
-    terminal-notifier -title "Reloading Desktop Environment Configs" -subtitle "~ yabai, skhd, Übersicht." -ignoreDnD; \
+    terminal-notifier -title "Reloading Desktop Environment Configs" -message "~ yabai, skhd, Übersicht." -ignoreDnD; \
     kill -9 $(pgrep bersicht); \
     source ~/.yabairc; \
     skhd -r; \
@@ -32,7 +32,7 @@ default, nopayload < ctrl + alt + cmd - r : \
     osascript -e 'tell application id 'tracesof.Uebersicht' to activate';
 
 
-ctrl + cmd + shift - h: /Users/LWJ/Scripts/join_discord_home.sh
+default, nopayload < ctrl + cmd + shift - h: /Users/LWJ/Scripts/join_discord_home.sh
 
 # toggle yabai layout modes
 default, nopayload < fn + ctrl + alt - f : \
@@ -88,19 +88,19 @@ default, nopayload < ctrl + cmd - left  : yabai -m window --warp west
 default, nopayload < ctrl + cmd - right : yabai -m window --warp east
 
 # move window in as stack
-default, nopayload < fn + ctrl + alt + cmd - pageup   : yabai -m window --stack north \
+default, nopayload < ctrl + alt + cmd - up   : yabai -m window --stack north \
     sleep 0.5; \
     yabai -m window --toggle border; sleep 0.25; \
     yabai -m window --toggle border;
-default, nopayload < fn + ctrl + alt + cmd - pagedown : yabai -m window --stack south \
+default, nopayload < ctrl + alt + cmd - down : yabai -m window --stack south \
     sleep 0.5; \
     yabai -m window --toggle border; sleep 0.25; \
     yabai -m window --toggle border;
-default, nopayload < fn + ctrl + alt + cmd - home   : yabai -m window --stack west \
+default, nopayload < ctrl + alt + cmd - left   : yabai -m window --stack west \
     sleep 0.5; \
     yabai -m window --toggle border; sleep 0.25; \
     yabai -m window --toggle border;
-default, nopayload < fn + ctrl + alt + cmd - end    : yabai -m window --stack east \
+default, nopayload < ctrl + alt + cmd - right    : yabai -m window --stack east \
     sleep 0.5; \
     yabai -m window --toggle border; sleep 0.25; \
     yabai -m window --toggle border;
@@ -114,8 +114,6 @@ default, nopayload < shift + ctrl + cmd - right : yabai -m window --swap east
 # cycle window stack
 default, nopayload < shift + ctrl + alt - up : yabai -m window --focus stack.next
 default, nopayload < shift + ctrl + alt - down : yabai -m window --focus stack.prev
-default, nopayload < ctrl + alt + cmd - up : yabai -m window --focus stack.next
-default, nopayload < ctrl + alt + cmd - down : yabai -m window --focus stack.prev
 
 # shift window size
 default, nopayload < shift + ctrl + alt - left  : yabai -m window --ratio rel:-0.05
@@ -240,15 +238,13 @@ alt + ctrl - 0x2F : yabai -m window --space next; yabai -m space --focus next
 # create a new space
 alt + ctrl - 0x18 : \
     yabai -m space --create; \
-    osascript -e "tell application \"Übersicht\" to refresh widget id \"miniyabar-spaces-primary-jsx\""; \
-    osascript -e "tell application \"Übersicht\" to refresh widget id \"miniyabar-spaces-secondary-jsx\"";
+    osascript -e "tell application \"Übersicht\" to refresh widget id \"clarity-spaces-jsx\"";
 
 # delete current space providing that said space isn't the first 9 spaces
 alt + ctrl - 0x1B : \
-    if [[ "$(yabai -m query --spaces | jq '[.[] | .focused ]' | jq '.[0:9]' | jq 'add')" == "0" ]]; then \
+    if [[ "$(yabai -m query --spaces | jq '[.[] | ."has-focus" ] | .[0:9] | index(true) != null')" == "false" ]]; then \
         yabai -m space --destroy; \
-        osascript -e "tell application \"Übersicht\" to refresh widget id \"miniyabar-spaces-primary-jsx\""; \
-        osascript -e "tell application \"Übersicht\" to refresh widget id \"miniyabar-spaces-secondary-jsx\""; \
+        osascript -e "tell application \"Übersicht\" to refresh widget id \"clarity-spaces-jsx\""; \
     else \
         terminal-notifier -title "Locked Space" -subtitle "This space cannot be deleted." -ignoreDnD; \
         osascript -e 'beep'; \

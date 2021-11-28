@@ -4,9 +4,18 @@ echo "loading sa"
 sudo yabai --load-sa
 sleep 2
 
+if (yabai --check-sa); then
+    echo "sa loaded";
+else
+    echo "sa not loaded"
+    sleep 5
+    echo "switching modes"
+    brew services restart skhd
+    skhd -k "fn + ctrl + alt + cmd - p";
+fi
+
 #layouts
 echo "configuring layouts"
-yabai -m config layout bsp
 yabai -m space 1 --label term
 yabai -m space 2 --label web
 yabai -m space 3 --label ide
@@ -36,18 +45,17 @@ yabai -m config focus_follows_mouse off
 yabai -m config mouse_modifier fn
 #yabai -m mouse_drop_action stack
 
-#miniyabar
+#clarity
 yabai -m signal --add event=space_changed \
     action="osascript -e 'tell application id \"tracesof.Uebersicht\" to refresh widget id \"clarity-spaces-jsx\"'"
 yabai -m signal --add event=display_changed \
     action="osascript -e 'tell application id \"tracesof.Uebersicht\" to refresh widget id \"clarity-spaces-jsx\"'"
 
-
 #we immediately refresh as we run this script just in case ubersicht was already loaded
 osascript -e 'tell application id "tracesof.Uebersicht" to refresh widget id "clarity-spaces-jsx"'
 
 #floating
-#yabai -m config window_topmost on
+yabai -m config window_topmost on
 
 #appearance
 yabai -m config window_shadow on
@@ -59,7 +67,7 @@ yabai -m config insert_feedback_color      0xddff8800
 yabai -m config window_opacity               off
 yabai -m config active_window_opacity        1.0
 yabai -m config normal_window_opacity        1.0
-yabai -m config window_opacity_duration      0.0 #must be 0 due to catalina bug
+#yabai -m config window_opacity_duration      0.0 #must be 0 due to catalina bug
 
 #mappings of apps to spaces
 #yabai -m rule --add app="^(Safari|Google Chrome|Chromium|Firefox|Microsoft Edge)$" space=2
@@ -92,6 +100,11 @@ yabai -m rule --add app="^FaceTime$" manage=off sticky=on
 yabai -m rule --add app="^Calculator$" manage=off
 yabai -m rule --add app="^TimeMachineEditor$" manage=off
 yabai -m rule --add app="^NTFS for Mac$" manage=off
+yabai -m rule --add app="^mpv$" manage=off
 
+#layout
+yabai -m config layout bsp
+
+# done
 echo "yabai config is now loaded."
-terminal-notifier -title "yabai ready" -subtitle "yabai is fully loaded."
+terminal-notifier -title "yabai ready" -message "yabai is fully loaded." -ignoreDnD
