@@ -16,13 +16,13 @@ brew upgrade
 echo "Installing cli tools..."
 brew install \
     bash zsh fish \
-    git wget tmux vim \
+    git wget tmux vim neovim \
     gcc python python3 node npm \
     openssl ssh-copy-id telnet nmap \
     ffmpeg imagemagick cocoapods \
     neofetch youtube-dl \
     mas \
-    coreutils findutils gnu-tar gnu-sed gawk gnutls gnu-indent gnu-getopt
+    coreutils findutils util-linux gnu-tar gnu-sed gawk gnutls gnu-indent gnu-getopt
 
 echo "Installing gui tools..."
 brew cask install \
