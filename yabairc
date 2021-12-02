@@ -55,7 +55,8 @@ yabai -m signal --add event=display_changed \
 osascript -e 'tell application id "tracesof.Uebersicht" to refresh widget id "clarity-spaces-jsx"'
 
 #floating
-yabai -m config window_topmost on
+#disabled due to bugs with menus
+#yabai -m config window_topmost on
 
 #appearance
 yabai -m config window_shadow on
@@ -83,6 +84,7 @@ echo "configuring exceptions"
 yabai -m rule --add title="^Preferences$" manage=off
 yabai -m rule --add app="^(Safari|Safari Technology Preview)$" title="^(General|Tabs|AutoFill|Passwords|Search|Security|Privacy|Websites|Extensions|Advanced|Privacy Report)$" manage=off
 yabai -m rule --add app="^(About This Mac|System Information)$" manage=off
+yabai -m rule --add title="^Problem Report for" manage=off
 yabai -m rule --add app="^iStat Menus" manage=off
 yabai -m rule --add app="^Finder$" title="^(Move|Copy|Delete|Connecting to Server)$" manage=off
 yabai -m rule --add app="^Finder$" title="^.*( Info)$" manage=off
