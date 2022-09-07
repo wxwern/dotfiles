@@ -29,13 +29,29 @@ if &t_Co == 8 && $TERM !~# '^Eterm'
   set t_Co=16
 endif
 
+" install vim-plug if needed
+let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
+if empty(glob(data_dir . '/autoload/plug.vim'))
+  silent execute '!curl -fLo '.data_dir.'/autoload/plug.vim --create-dirs  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+  autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+endif
+
+" run PlugInstall if there are missing plugins
+autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
+  \| PlugInstall --sync | source $MYVIMRC
+\| endif
+
 " configure vim-plug plugins
 set nocompatible
+let g:remoteSession = ($STY != "")
 call plug#begin(has('nvim') ? (stdpath('data') . '/plugged') : ('~/.vim/plugged'))
 
 " Syntax highlighting
 Plug 'sheerun/vim-polyglot'
 let g:polyglot_disabled = ['sensible']
+
+" Svelte syntax highlighting
+Plug 'evanleck/vim-svelte', {'branch': 'main'}
 
 " Setup ALE
 Plug 'dense-analysis/ale'
@@ -47,16 +63,20 @@ let g:ale_python_pylint_options = '--rcfile=/Users/LWJ/.pylintrc'
 let g:ale_echo_msg_format = '[%severity%] %linter%: %s'
 let g:airline#extensions#ale#enabled = 1
 
-" jump to prev/next error (ctrl key and j/k)
+" jump to prev/next error (gj gk)
 nmap <silent> gk <Plug>(ale_previous_wrap)
 nmap <silent> gj <Plug>(ale_next_wrap)
 
-Plug 'neoclide/coc.nvim', {'branch': 'release'}
+Plug 'neoclide/coc.nvim', {'branch': 'release', 'commit': '0f13f07dea8a06dd93718c0b559fc8dc3dc61fc6' }
+
 " GoTo code navigation.
 nmap <silent> gd <Plug>(coc-definition)
 nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
+
+" Autocomplete on enter
+inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm() : "\<C-g>u\<CR>"
 
 " Highlight the symbol and its references when holding the cursor.
 autocmd CursorHold * silent call CocActionAsync('highlight')
@@ -67,6 +87,9 @@ nmap <leader>rn <Plug>(coc-rename)
 " Github Copilot
 if has('nvim')
   Plug 'github/copilot.vim'
+  " cycle copilot suggestions
+  inoremap <C-[> <Plug>(copilot-previous)
+  inoremap <C-]> <Plug>(copilot-next)
 endif
 
 " Return to previous location on reopen.
@@ -76,13 +99,12 @@ let g:lastplace_ignore = "gitcommit,svn"
 " Setup vim airline
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
-let g:airline_powerline_fonts = 1
+if !g:remoteSession
+  let g:airline_powerline_fonts = 1
+endif
+
 let g:airline#extensions#tabline#enabled = 1
-let g:airline#extensions#tabline#show_buffers = 0
 let g:airline#extensions#tabline#show_splits = 0
-let g:airline#extensions#tabline#show_tabs = 1
-let g:airline#extensions#tabline#show_tab_nr = 0
-let g:airline#extensions#tabline#show_tab_type = 0
 let g:airline#extensions#tabline#close_symbol = '×'
 let g:airline#extensions#tabline#show_close_button = 0
 let g:airline#extensions#tabline#left_sep = ' '
@@ -99,6 +121,13 @@ let g:airline_right_alt_sep = '|'
 
 Plug 'Yggdroot/indentLine'
 let g:indentLine_char_list = ['|', '¦', '┆', '┊', '┊', '┊', '┊', '┊', '┊']
+" n for Normal mode
+" v for Visual mode
+" i for Insert mode
+" c for Command line editing, for 'incsearch'
+let g:indentLine_concealcursor = ""
+let g:indentLine_conceallevel = 2
+let g:indentLine_setConceal = 2
 
 Plug 'tomasiser/vim-code-dark'
 let g:airline_theme = 'codedark'
@@ -114,20 +143,7 @@ map g/ <Plug>(incsearch-stay)
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 map <C-p> :FZF<CR>
-
-" Prefer opening in original tab if present
-function! s:GotoOrOpen(command, ...)
-  for file in a:000
-    if a:command == 'e'
-      exec 'e ' . file
-    else
-      exec "tab drop " . file
-    endif
-  endfor
-endfunction
-command! -nargs=+ GotoOrOpen call s:GotoOrOpen(<f-args>)
 let g:fzf_action = {
-      \ 'ctrl-t': 'GotoOrOpen tab',
       \ 'ctrl-x': 'split',
       \ 'ctrl-v': 'vsplit' }
 
@@ -138,7 +154,6 @@ nnoremap <silent> <expr> <C-p> (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : ''
 Plug 'tpope/vim-commentary'
 
 " Setup NERDTree
-let g:remoteSession = ($STY != "")
 if g:remoteSession
   Plug 'preservim/nerdtree' |
         \ Plug 'Xuyuanp/nerdtree-git-plugin'
@@ -154,18 +169,35 @@ autocmd BufWinEnter * if getcmdwintype() == '' | silent NERDTreeMirror | endif
 autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | quit | endif
 " Close the tab if NERDTree is the only window remaining in it.
 autocmd BufEnter * if winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | quit | endif
-" NERDTree keyboard shortcuts
-nnoremap <C-n> :NERDTreeMirror<CR>:NERDTreeFocus<CR>
-nnoremap <C-t> :NERDTreeMirror<CR>:NERDTreeToggle<CR>
-" NERDTree always open in tab
-let NERDTreeCustomOpenArgs={'file':{'where': 't', 'reuse': bufname("%") == "" ? 'currenttab': 'all', 'keepopen': 1, 'stay': 0}}
 
+" Discord Rich Presence
+Plug 'vimsence/vimsence'
 
 call plug#end()
 
 " because syntax highlighting randomly breaks
 noremap <C-q>  <Esc>:syntax sync fromstart<CR>
 inoremap <C-q> <Esc><Esc>:syntax sync fromstart<CR>
+
+" mappings
+" lazy reference of https://vim.fandom.com/wiki/Easier_buffer_switching
+" \l       : list buffers
+" \b \f \g : go back/forward/last-used
+" \1 \2 \3 : go to buffer 1/2/3 etc
+nnoremap <Leader>l :ls<CR>
+nnoremap <Leader>b :bp<CR>
+nnoremap <Leader>f :bn<CR>
+nnoremap <Leader>g :e#<CR>
+nnoremap <Leader>1 :1b<CR>
+nnoremap <Leader>2 :2b<CR>
+nnoremap <Leader>3 :3b<CR>
+nnoremap <Leader>4 :4b<CR>
+nnoremap <Leader>5 :5b<CR>
+nnoremap <Leader>6 :6b<CR>
+nnoremap <Leader>7 :7b<CR>
+nnoremap <Leader>8 :8b<CR>
+nnoremap <Leader>9 :9b<CR>
+nnoremap <Leader>0 :10b<CR>
 
 " line number formatting depending on input modes
 set number relativenumber

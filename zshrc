@@ -78,9 +78,9 @@ export ZSH_AUTOSUGGEST_COMPLETION_IGNORE="(rm|rmdir|sudo) *"
 
 # Preferred editor for local and remote sessions
 if [[ -n $SSH_CONNECTION ]]; then
-  export EDITOR='vim'
+  export EDITOR='nvim'
 else
-  export EDITOR='vim'
+  export EDITOR='nvim'
 fi
 
 #replace macos utils with gnu utils
@@ -147,26 +147,61 @@ prompt_context() {
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
 # For a full list of active aliases, run `alias`.
 
-alias vim="nvim" # use nvim instead of vim, old habits die hard
+alias vim="echo 'note: using nvim'; nvim" # use nvim instead of vim, old habits die hard
 alias tetris="autoload -Uz tetriscurses && tetriscurses"
-#alias ssh='~/Repositories/external/ssh-ident/ssh-ident'
-alias kali-vm='(echo "Starting VM..." && vmrun -T fusion start "/Users/LWJ/Documents/VMWare/Kali.vmwarevm" nogui && echo "Connecting via SSH...") && ssh lwj@kali-vm.local'
-alias ubuntu-vm='(echo "Starting VM..." && vmrun -T fusion start "/Users/LWJ/Documents/VMWare/Ubuntu.vmwarevm" nogui && echo "Connecting via SSH...") && ssh lwj@ubuntu-vm.local'
+alias kali-vm='(echo "Starting VM..." && vmrun -T fusion start ~/Documents/VMWare/Kali\ Linux.vmwarevm nogui && echo "Connecting via SSH...") && ssh kali@kali.local'
 alias ev3='~/Repositories/internal/c4ev3/ev3duder/ev3duder'
 alias ev3upload='~/Repositories/internal/c4ev3/scripts/ev3upload'
 alias ev3build='~/Repositories/internal/c4ev3/scripts/ev3build'
 alias ev3buildUpload='~/Repositories/internal/c4ev3/scripts/ev3buildUpload'
 alias mcmodvchange="'/Users/LWJ/Library/Application Support/minecraft/mods_change.sh'"
+alias obsbrowsercam="/Applications/OBS.app/Contents/MacOS/obs --enable-gpu --use-fake-ui-for-media-stream >> /dev/null 2>&1"
 alias xcSimStatusOverride='xcrun simctl status_bar booted override --time "9:41 AM" --batteryState charged --batteryLevel 100 --wifiMode active --wifiBars 3 --cellularMode active --cellularBars 4 --operatorName ""'
+
+docker() {
+  echo "running docker command as nerdctl via lima-vm"
+  echo " ~> lima nerdctl $@"
+  lima nerdctl "$@"
+}
+
+2030download() {
+  if [[ -z "$1" ]]; then
+    echo "argument 1 needed, e.g. Lab1"
+  else
+    mkdir -p ~/Projects/CS2030S_Final/
+    echo "Clearing ~/Projects/CS2030S_Final/$1/"
+    echo
+    rm -r ~/Projects/CS2030S_Final/"$1"/
+    echo "Downloading from server..."
+    scp -r stu.comp.nus.edu.sg:~/CS2030S/"$1" ~/Projects/CS2030S_Final/ &&
+    cd ~/Projects/CS2030S_Final/"$1" &&
+    echo &&
+    echo "Clearing *.class files..." &&
+    (rm -r *.class || true) &&
+    echo &&
+    echo "Now at ~/Projects/CS2030S_Final/$1/"
+  fi
+}
+
+2030upload() {
+  if [[ -z "$1" ]]; then
+    echo "argument 1 needed, e.g. Lab1"
+  else
+    echo "Now at ~/Projects/CS2030S_Final/" &&
+    cd ~/Projects/CS2030S_Final/ &&
+    scp -r "$1" stu.comp.nus.edu.sg:~/CS2030S/"$1"
+  fi
+}
+
 proctorScreenRec() {
     ffmpeg -f avfoundation -r 1 -probesize 20M -threads 1 -i "$(ffmpeg -f avfoundation -list_devices true -i "" 2>&1 | grep "Capture screen" | cut -d ' ' -f 5 | cut -c 2):" -vcodec libx264 -b:v 128k -s hd1080 ~/Desktop/proctor_screenrec_$(date +"%Y%m%d_%H%M%S").mp4
 }
 ctf() {
-    alias ls='ls -lGaf'
+    alias ls='ls -lGa'
     PATH=$HOME/CTF/Tools/bin:$PATH
     cd ~/CTF
 }
-alias ll='ls -lGaf'
+alias ll='ls -lGa'
 
 # zsh ignore spaces
 setopt histignorespace

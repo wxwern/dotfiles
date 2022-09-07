@@ -8,101 +8,95 @@ if (yabai --check-sa); then
     echo "sa loaded";
 else
     echo "sa not loaded"
-    sleep 5
-    echo "switching modes"
-    brew services restart skhd
-    skhd -k "fn + ctrl + alt + cmd - p";
 fi
 
 #layouts
 echo "configuring layouts"
-yabai -m space 1 --label term
-yabai -m space 2 --label web
-yabai -m space 3 --label ide
-yabai -m space 4 --label chat
-yabai -m space 5 --label casual
-yabai -m space 6 --label office
-yabai -m space 7 --label games
-yabai -m space 8 --label misc
-yabai -m space 9 --label create
-yabai -m config --space 3 layout float
-yabai -m config --space 5 layout float
-yabai -m config --space 7 layout float
-yabai -m config --space 8 layout float
-yabai -m config --space 9 layout float
 
 #paddings, gaps
-#yabai -m config external_bar all:22:0
-yabai -m config window_gap 8
-yabai -m config top_padding 8
-yabai -m config bottom_padding 8
-yabai -m config left_padding 8
-yabai -m config right_padding 8
+yabai -m config external_bar all:0:28
+yabai -m config window_gap 6
+yabai -m config top_padding 4
+yabai -m config bottom_padding 4
+yabai -m config left_padding 4
+yabai -m config right_padding 4
+yabai -m config window_origin_display cursor
 
 #mouse
 yabai -m config mouse_follows_focus off
 yabai -m config focus_follows_mouse off
-yabai -m config mouse_modifier fn
-#yabai -m mouse_drop_action stack
+yabai -m config mouse_modifier ctrl
 
 #clarity
-yabai -m signal --add event=space_changed \
-    action="osascript -e 'tell application id \"tracesof.Uebersicht\" to refresh widget id \"clarity-spaces-jsx\"'"
-yabai -m signal --add event=display_changed \
-    action="osascript -e 'tell application id \"tracesof.Uebersicht\" to refresh widget id \"clarity-spaces-jsx\"'"
+REL_SPACES_IND="osascript -e 'tell application id \"tracesof.Uebersicht\" to refresh widget id \"clarity-spaces-jsx\"'"
+REL_BAR_IND="osascript -e 'tell application id \"tracesof.Uebersicht\" to refresh widget id \"clarity-bar-jsx\"'"
+yabai -m signal --add event=space_changed   action="$REL_SPACES_IND"
+yabai -m signal --add event=display_changed action="$REL_SPACES_IND"
+yabai -m signal --add event=window_created   action="$REL_SPACES_IND"
+yabai -m signal --add event=window_moved     action="$REL_SPACES_IND"
+yabai -m signal --add event=window_destroyed action="$REL_SPACES_IND"
+yabai -m signal --add event=window_minimized   action="$REL_SPACES_IND"
+yabai -m signal --add event=window_deminimized action="$REL_SPACES_IND"
+yabai -m signal --add event=application_hidden action="$REL_SPACES_IND"
+yabai -m signal --add event=application_visible action="$REL_SPACES_IND"
+yabai -m signal --add event=mission_control_exit action="$REL_SPACES_IND"
+
+yabai -m signal --add event=space_changed    action="$REL_BAR_IND"
+yabai -m signal --add event=display_changed  action="$REL_BAR_IND"
+yabai -m signal --add event=window_created   action="$REL_BAR_IND"
+yabai -m signal --add event=window_moved     action="$REL_BAR_IND"
+yabai -m signal --add event=window_destroyed action="$REL_BAR_IND"
+yabai -m signal --add event=window_minimized   action="$REL_BAR_IND"
+yabai -m signal --add event=window_deminimized action="$REL_BAR_IND"
+yabai -m signal --add event=application_hidden action="$REL_BAR_IND"
+yabai -m signal --add event=application_visible action="$REL_BAR_IND"
+yabai -m signal --add event=mission_control_exit action="$REL_BAR_IND"
 
 #we immediately refresh as we run this script just in case ubersicht was already loaded
-osascript -e 'tell application id "tracesof.Uebersicht" to refresh widget id "clarity-spaces-jsx"'
+osascript -e "$REL_SPACES_IND"
+osascript -e "$REL_BAR_IND"
 
 #floating
 #disabled due to bugs with menus
-#yabai -m config window_topmost on
+#yabai -m config window_topmost off
 
 #appearance
-yabai -m config window_shadow on
+yabai -m config window_shadow float 
 yabai -m config window_border off
-yabai -m config window_border_width 4
-yabai -m config active_window_border_color 0xdd0088ff
-yabai -m config normal_window_border_color 0xdd333333
-yabai -m config insert_feedback_color      0xddff8800
-yabai -m config window_opacity               off
+yabai -m config window_border_width 6
+yabai -m config active_window_border_color 0xff0088ff
+yabai -m config normal_window_border_color 0xff333333
+yabai -m config insert_feedback_color      0xffff8800
+yabai -m config window_opacity               on
 yabai -m config active_window_opacity        1.0
 yabai -m config normal_window_opacity        1.0
-#yabai -m config window_opacity_duration      0.0 #must be 0 due to catalina bug
-
-#mappings of apps to spaces
-#yabai -m rule --add app="^(Safari|Google Chrome|Chromium|Firefox|Microsoft Edge)$" space=2
-#yabai -m rule --add app="^(Xcode|Visual Studio Code|Android Studio|Arduino|Eclipse|Activity Monitor|Disk Utility)$" space=3
-#yabai -m rule --add app="^(WhatsApp|Telegram|Messenger|Messages)$" space=4
-#yabai -m rule --add app="^(Mail|Reminders|Calendar|Notes)$" space=5
-#yabai -m rule --add app="^(Microsoft (Word|Excel|PowerPoint|OneNote|Teams))$" space=6
-#yabai -m rule --add app="^(Steam|Discord)$" space=7
-#yabai -m rule --add title="^(Minecraft*)$" space=7
+yabai -m config window_opacity_duration      0.0 #must be 0 due to catalina bug
 
 #exceptions to apps and things that tend to not work well
 echo "configuring exceptions"
-yabai -m rule --add title="^Preferences$" manage=off
-yabai -m rule --add app="^(Safari|Safari Technology Preview)$" title="^(General|Tabs|AutoFill|Passwords|Search|Security|Privacy|Websites|Extensions|Advanced|Privacy Report)$" manage=off
-yabai -m rule --add app="^(About This Mac|System Information)$" manage=off
-yabai -m rule --add title="^Problem Report for" manage=off
+yabai -m rule --add title="^Preferences$" layer=above manage=off
+yabai -m rule --add app="^System Preferences$" layer=above manage=off
+yabai -m rule --add app="^(Safari|Safari Technology Preview)$" title="^(General|Tabs|AutoFill|Passwords|Search|Security|Privacy|Websites|Extensions|Advanced|Privacy Report)$" layer=above manage=off
+yabai -m rule --add app="^(About This Mac|System Information)$" layer=above manage=off
+yabai -m rule --add title="^Problem Report for" layer=above manage=off
 yabai -m rule --add app="^iStat Menus" manage=off
-yabai -m rule --add app="^Finder$" title="^(Move|Copy|Delete|Connecting to Server)$" manage=off
-yabai -m rule --add app="^Finder$" title="^.*( Info)$" manage=off
+yabai -m rule --add app="^Finder$" title="^(Move|Copy|Delete|Connecting to Server)$" layer=above manage=off
+yabai -m rule --add app="^Finder$" title="^.*( Info)$" layer=above manage=off
+yabai -m rule --add app="^Digital Colou?r Meter$" layer=above sticky=on
+yabai -m rule --add app="^Macs Fan Control$" layer=above manage=off
+yabai -m rule --add app="^Digital Color Meter$" layer=above manage=off sticky=on
+yabai -m rule --add app="^(Archive Utility|DiskImageMounter|Installer)$" layer=above manage=off
+yabai -m rule --add app="^(Calculator|Calculator Plus)$" layer=above manage=off
+yabai -m rule --add app="^Stickies$" layer=above manage=off border=off
+yabai -m rule --add app="^Microsoft Teams$" title="^Microsoft Teams Notification$" layer=above manage=off
 yabai -m rule --add app="^Bartender 4$" manage=off
-yabai -m rule --add app="^Digital Colou?r Meter$" sticky=on
-yabai -m rule --add app="^Macs Fan Control$" manage=off
-yabai -m rule --add app="^System Preferences$" manage=off
-yabai -m rule --add app="^Digital Color Meter$" manage=off sticky=on
-yabai -m rule --add app="^(Archive Utility|DiskImageMounter)$" manage=off
-yabai -m rule --add app="^Stickies$" manage=off
-yabai -m rule --add app="^Microsoft Teams$" title="^Microsoft Teams Notification$" manage=off
 yabai -m rule --add app="^Delete Apps$" manage=off
 yabai -m rule --add app="^Übersicht$" manage=off
 yabai -m rule --add app="^FaceTime$" manage=off sticky=on
-yabai -m rule --add app="^Calculator$" manage=off
 yabai -m rule --add app="^TimeMachineEditor$" manage=off
 yabai -m rule --add app="^NTFS for Mac$" manage=off
-yabai -m rule --add app="^mpv$" manage=off
+yabai -m rule --add app="^(QuickTime Player|mpv)$" manage=off
+yabai -m rule --add app!="^(Xcode)$" title="^$" border=off
 
 #layout
 yabai -m config layout bsp
