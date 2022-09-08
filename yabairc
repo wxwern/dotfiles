@@ -10,30 +10,15 @@ else
     echo "sa not loaded"
 fi
 
-#layouts
-echo "configuring layouts"
-
-#paddings, gaps
-yabai -m config external_bar all:0:28
-yabai -m config window_gap 6
-yabai -m config top_padding 4
-yabai -m config bottom_padding 4
-yabai -m config left_padding 4
-yabai -m config right_padding 4
-yabai -m config window_origin_display cursor
-
-#mouse
-yabai -m config mouse_follows_focus off
-yabai -m config focus_follows_mouse off
-yabai -m config mouse_modifier ctrl
-
 #clarity
+echo "configuring signals"
 REL_SPACES_IND="osascript -e 'tell application id \"tracesof.Uebersicht\" to refresh widget id \"clarity-spaces-jsx\"'"
 REL_BAR_IND="osascript -e 'tell application id \"tracesof.Uebersicht\" to refresh widget id \"clarity-bar-jsx\"'"
 yabai -m signal --add event=space_changed   action="$REL_SPACES_IND"
 yabai -m signal --add event=display_changed action="$REL_SPACES_IND"
 yabai -m signal --add event=window_created   action="$REL_SPACES_IND"
 yabai -m signal --add event=window_moved     action="$REL_SPACES_IND"
+yabai -m signal --add event=window_resized   action="$REL_SPACES_IND"
 yabai -m signal --add event=window_destroyed action="$REL_SPACES_IND"
 yabai -m signal --add event=window_minimized   action="$REL_SPACES_IND"
 yabai -m signal --add event=window_deminimized action="$REL_SPACES_IND"
@@ -45,6 +30,7 @@ yabai -m signal --add event=space_changed    action="$REL_BAR_IND"
 yabai -m signal --add event=display_changed  action="$REL_BAR_IND"
 yabai -m signal --add event=window_created   action="$REL_BAR_IND"
 yabai -m signal --add event=window_moved     action="$REL_BAR_IND"
+yabai -m signal --add event=window_resized   action="$REL_BAR_IND"
 yabai -m signal --add event=window_destroyed action="$REL_BAR_IND"
 yabai -m signal --add event=window_minimized   action="$REL_BAR_IND"
 yabai -m signal --add event=window_deminimized action="$REL_BAR_IND"
@@ -52,28 +38,10 @@ yabai -m signal --add event=application_hidden action="$REL_BAR_IND"
 yabai -m signal --add event=application_visible action="$REL_BAR_IND"
 yabai -m signal --add event=mission_control_exit action="$REL_BAR_IND"
 
-#we immediately refresh as we run this script just in case ubersicht was already loaded
-osascript -e "$REL_SPACES_IND"
-osascript -e "$REL_BAR_IND"
-
-#floating
-#disabled due to bugs with menus
-#yabai -m config window_topmost off
-
-#appearance
-yabai -m config window_shadow float 
-yabai -m config window_border off
-yabai -m config window_border_width 6
-yabai -m config active_window_border_color 0xff0088ff
-yabai -m config normal_window_border_color 0xff333333
-yabai -m config insert_feedback_color      0xffff8800
-yabai -m config window_opacity               on
-yabai -m config active_window_opacity        1.0
-yabai -m config normal_window_opacity        1.0
-yabai -m config window_opacity_duration      0.0 #must be 0 due to catalina bug
 
 #exceptions to apps and things that tend to not work well
 echo "configuring exceptions"
+yabai -m rule --add role="^AXSheet$" layer=above manage=off border=off
 yabai -m rule --add title="^Preferences$" layer=above manage=off
 yabai -m rule --add app="^System Preferences$" layer=above manage=off
 yabai -m rule --add app="^(Safari|Safari Technology Preview)$" title="^(General|Tabs|AutoFill|Passwords|Search|Security|Privacy|Websites|Extensions|Advanced|Privacy Report)$" layer=above manage=off
@@ -98,9 +66,34 @@ yabai -m rule --add app="^NTFS for Mac$" manage=off
 yabai -m rule --add app="^(QuickTime Player|mpv)$" manage=off
 yabai -m rule --add app!="^(Xcode)$" title="^$" border=off
 
-#layout
-yabai -m config layout bsp
+#layouts
+echo "configuring layouts and appearance"
+yabai -m config \
+    external_bar all:0:28 \
+    window_gap 6 \
+    top_padding 4 \
+    bottom_padding 4 \
+    left_padding 4 \
+    right_padding 4 \
+    mouse_modifier ctrl \
+    mouse_follows_focus off \
+    focus_follows_mouse off \
+    window_origin_display cursor \
+    window_topmost on \
+    window_shadow float \
+    window_border on \
+    window_border_width 6 \
+    active_window_border_color 0xffff2277 \
+    normal_window_border_color 0xff553355 \
+    insert_feedback_color      0xffff8800 \
+    window_opacity               on \
+    active_window_opacity        1.0 \
+    normal_window_opacity        1.0 \
+    layout bsp
 
 # done
 echo "yabai config is now loaded."
 terminal-notifier -title "yabai ready" -message "yabai is fully loaded." -ignoreDnD
+# refresh in case ubersicht was already loaded but not updated
+osascript -e "$REL_SPACES_IND"
+osascript -e "$REL_BAR_IND"
