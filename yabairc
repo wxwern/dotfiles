@@ -1,17 +1,28 @@
 #!/usr/bin/env bash
 
 echo "loading sa"
-sudo yabai --load-sa
-sleep 2
 
-if (yabai --check-sa); then
+if (sudo yabai --load-sa); then
     echo "sa loaded";
 else
+    terminal-notifier -title "yabai scripting-addition load failed!" -message "scripting-addition did not load!" -ignoreDnD
     echo "sa not loaded"
 fi
 
-#clarity
-echo "configuring signals"
+# reset configs
+echo "resetting configs" # in case this is a rerun
+for i in $(yabai -m signal --list | jq '.[].index'); do
+    yabai -m signal --remove 0;
+done
+for i in $(yabai -m rule --list | jq '.[].index'); do
+    yabai -m rule --remove 0;
+done
+yabai -m config \
+    window_border off \
+    window_animation_duration 0.0
+
+# configure clarity signals
+echo "configuring clarity signals"
 REL_SPACES_IND="osascript -e 'tell application id \"tracesof.Uebersicht\" to refresh widget id \"clarity-spaces-jsx\"'"
 REL_BAR_IND="osascript -e 'tell application id \"tracesof.Uebersicht\" to refresh widget id \"clarity-bar-jsx\"'"
 yabai -m signal --add event=space_changed   action="$REL_SPACES_IND"
@@ -38,33 +49,51 @@ yabai -m signal --add event=application_hidden action="$REL_BAR_IND"
 yabai -m signal --add event=application_visible action="$REL_BAR_IND"
 yabai -m signal --add event=mission_control_exit action="$REL_BAR_IND"
 
-
-#exceptions to apps and things that tend to not work well
+# exceptions to apps and things that tend to not work well
 echo "configuring exceptions"
-yabai -m rule --add role="^AXSheet$" layer=above manage=off border=off
+
+# - auto un-topmost any bsp window
+yabai -m signal --add event=window_focused action='yabai -m query --windows --window $YABAI_WINDOW_ID | jq -e ".\"is-floating\" == false and .\"is-topmost\" == true" && yabai -m window $YABAI_WINDOW_ID --toggle topmost'
+
+# - float if window is not resizable
+CHECK_COND_FORCE='yabai -m query --windows --window $YABAI_WINDOW_ID | jq -er ".\"can-resize\" == false and .\"is-floating\" == false"'
+POS_FORCE_VAR='pos_x="$(bc -l <<< "$(yabai -m query --displays --window $YABAI_WINDOW_ID | jq ".frame.w/2") - $(yabai -m query --windows --window $YABAI_WINDOW_ID | jq ".frame.w/2") + $(yabai -m query --displays --window $YABAI_WINDOW_ID | jq ".frame.x")")" pos_y="$(bc -l <<< "$(yabai -m query --displays --window $YABAI_WINDOW_ID | jq ".frame.h/2") - $(yabai -m query --windows --window $YABAI_WINDOW_ID | jq ".frame.h/2") + $(yabai -m query --displays --window $YABAI_WINDOW_ID | jq ".frame.y")")"'
+FLOAT_FORCE='yabai -m window $YABAI_WINDOW_ID --toggle float --move abs:$pos_x:$pos_y;'
+yabai -m signal --add event=window_created action="$CHECK_COND_FORCE && $POS_FORCE_VAR && $FLOAT_FORCE"
+
+# - focus some window on space if destroyed
+FOCUS_ON_DESTORY='yabai -m query --spaces --space | jq '."first-window"' | xargs -I {} yabai -m window --focus {} || true'
+yabai -m signal --add event=window_destroyed action="$FOCUS_ON_DESTORY"
+
+
+# - other rules
+EXCLUDE_ROLES_REGEX="^(AXMenu|AXSheet|AXDialog|AXSystemDialog|AXFloatingWindow|AXSystemFloatingWindow)$"
+yabai -m rule --add role="$EXCLUDE_ROLES_REGEX" layer=above manage=off border=off
+yabai -m rule --add subrole="$EXCLUDE_ROLES_REGEX" layer=above manage=off border=off
 yabai -m rule --add title="^Preferences$" layer=above manage=off
-yabai -m rule --add app="^System Preferences$" layer=above manage=off
-yabai -m rule --add app="^(Safari|Safari Technology Preview)$" title="^(General|Tabs|AutoFill|Passwords|Search|Security|Privacy|Websites|Extensions|Advanced|Privacy Report)$" layer=above manage=off
-yabai -m rule --add app="^(About This Mac|System Information)$" layer=above manage=off
+yabai -m rule --add app="^(Settings|System Preferences)$" layer=above manage=off
 yabai -m rule --add title="^Problem Report for" layer=above manage=off
 yabai -m rule --add app="^iStat Menus" manage=off
 yabai -m rule --add app="^Finder$" title="^(Move|Copy|Delete|Connecting to Server)$" layer=above manage=off
-yabai -m rule --add app="^Finder$" title="^.*( Info)$" layer=above manage=off
+#yabai -m rule --add app="^Finder$" title="^.*( Info)$" layer=above manage=off
 yabai -m rule --add app="^Digital Colou?r Meter$" layer=above sticky=on
 yabai -m rule --add app="^Macs Fan Control$" layer=above manage=off
 yabai -m rule --add app="^Digital Color Meter$" layer=above manage=off sticky=on
 yabai -m rule --add app="^(Archive Utility|DiskImageMounter|Installer)$" layer=above manage=off
 yabai -m rule --add app="^(Calculator|Calculator Plus)$" layer=above manage=off
-yabai -m rule --add app="^Stickies$" layer=above manage=off border=off
+yabai -m rule --add app="^Stickies$" layer=above manage=off border=off sticky=on
 yabai -m rule --add app="^Microsoft Teams$" title="^Microsoft Teams Notification$" layer=above manage=off
 yabai -m rule --add app="^Bartender 4$" manage=off
 yabai -m rule --add app="^Delete Apps$" manage=off
 yabai -m rule --add app="^Übersicht$" manage=off
-yabai -m rule --add app="^FaceTime$" manage=off sticky=on
+yabai -m rule --add app="^FaceTime$" layer=above manage=off sticky=on
 yabai -m rule --add app="^TimeMachineEditor$" manage=off
 yabai -m rule --add app="^NTFS for Mac$" manage=off
 yabai -m rule --add app="^(QuickTime Player|mpv)$" manage=off
-yabai -m rule --add app!="^(Xcode)$" title="^$" border=off
+
+# - for windows that aren't windows
+yabai -m rule --add app!="^(Xcode)$" title="^$" layer=above manage=off border=off
+#yabai -m rule --add app="^(Telegram|Calendar|Microsoft(.*))$" title="^$" layer=above manage=off
 
 #layouts
 echo "configuring layouts and appearance"
@@ -82,18 +111,23 @@ yabai -m config \
     window_topmost on \
     window_shadow float \
     window_border on \
-    window_border_width 6 \
+    window_border_width 2 \
+    window_border_radius 11 \
+    window_border_blur off \
     active_window_border_color 0xffff2277 \
     normal_window_border_color 0xff553355 \
     insert_feedback_color      0xffff8800 \
-    window_opacity               on \
+    window_opacity               off \
     active_window_opacity        1.0 \
     normal_window_opacity        1.0 \
-    layout bsp
+    split_type auto \
+    auto_balance off \
+    layout bsp \
+    window_animation_duration 0.1
 
 # done
 echo "yabai config is now loaded."
 terminal-notifier -title "yabai ready" -message "yabai is fully loaded." -ignoreDnD
 # refresh in case ubersicht was already loaded but not updated
-osascript -e "$REL_SPACES_IND"
-osascript -e "$REL_BAR_IND"
+sh -c "$REL_SPACES_IND"
+sh -c "$REL_BAR_IND"

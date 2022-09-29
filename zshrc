@@ -1,3 +1,25 @@
+# custom prompts if login session
+if [[ -o login ]]; then
+    # brew upgrade reminders
+    outdated_motd="$(cat ~/tmp/brew_outdated_motd.txt)"
+    if [[ -n "$outdated_motd" ]]; then
+        echo "$outdated_motd"
+    fi
+    brew() {
+        /usr/local/bin/brew "$@"
+        if [[ "$1" == "upgrade" || "$1" == "outdated" ]]; then
+            ~/Scripts/updateBrewOutdated
+        fi
+    }
+fi
+
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+# Initialization code that may require console input (password prompts, [y/n]
+# confirmations, etc.) must go above this block; everything else may go below.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
 # If you come from bash you might have to change your $PATH.
 export PATH=$HOME/bin:/usr/local/bin:$PATH
 
@@ -8,7 +30,7 @@ export ZSH="/Users/LWJ/.oh-my-zsh"
 # load a random theme each time oh-my-zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="agnoster-lwj"
+ZSH_THEME="powerlevel10k/powerlevel10k"
 
 # Uncomment the following line to use case-sensitive completion.
 # CASE_SENSITIVE="true"
@@ -59,10 +81,13 @@ COMPLETION_WAITING_DOTS="true"
 plugins=(git python macos zsh-autosuggestions zsh-syntax-highlighting)
 
 # Source oh my zsh
-source $ZSH/oh-my-zsh.sh
+[[ ! -f $ZSH/oh-my-zsh.sh ]] || source $ZSH/oh-my-zsh.sh
+
+# Source p10k
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # User configuration
-
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 
@@ -131,16 +156,16 @@ export SYSTEM_VERSION_COMPAT=0
 
 # colors!!!!
 export CLICOLOR=1
-export TERM="xterm-color"
+export TERM="xterm-256color"
 
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
 
-prompt_context() {
-    if [[ "$USER" != "$DEFAULT_USER" || -n "$SSH_CLIENT" ]]; then
-        prompt_segment black default "%(!.%{%F{yellow}%}.)$USER"
-    fi
-}
+#prompt_context() {
+#    if [[ "$USER" != "$DEFAULT_USER" || -n "$SSH_CLIENT" ]]; then
+#        prompt_segment black default "%(!.%{%F{yellow}%}.)$USER"
+#    fi
+#}
 
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
 # plugins, and themes. Aliases can be placed here, though oh-my-zsh
@@ -166,14 +191,14 @@ docker() {
 
 2030download() {
   if [[ -z "$1" ]]; then
-    echo "argument 1 needed, e.g. Lab1"
+    echo "Usage: 2030download <Lab#> [username@domain] [port]"
   else
     mkdir -p ~/Projects/CS2030S_Final/
     echo "Clearing ~/Projects/CS2030S_Final/$1/"
     echo
     rm -r ~/Projects/CS2030S_Final/"$1"/
     echo "Downloading from server..."
-    scp -r stu.comp.nus.edu.sg:~/CS2030S/"$1" ~/Projects/CS2030S_Final/ &&
+    scp -P "${3:-22}" -r "${2:-stu.comp.nus.edu.sg}":~/CS2030S/"$1" ~/Projects/CS2030S_Final/ &&
     cd ~/Projects/CS2030S_Final/"$1" &&
     echo &&
     echo "Clearing *.class files..." &&
@@ -185,11 +210,11 @@ docker() {
 
 2030upload() {
   if [[ -z "$1" ]]; then
-    echo "argument 1 needed, e.g. Lab1"
+    echo "Usage: 2030upload <Lab#> [username@domain] [port]"
   else
     echo "Now at ~/Projects/CS2030S_Final/" &&
     cd ~/Projects/CS2030S_Final/ &&
-    scp -r "$1" stu.comp.nus.edu.sg:~/CS2030S/"$1"
+    scp -P "${3:-22}" -r "./$1" "${2:-stu.comp.nus.edu.sg}":~/CS2030S/
   fi
 }
 
@@ -206,20 +231,6 @@ alias ll='ls -lGa'
 # zsh ignore spaces
 setopt histignorespace
 
-# print login logo
-if [[ -o login ]]; then
-    # brew upgrade reminders
-    outdated_motd="$(cat ~/tmp/brew_outdated_motd.txt)"
-    if [[ -n "$outdated_motd" ]]; then
-        echo "$outdated_motd"
-    fi
-    brew() {
-        /usr/local/bin/brew "$@"
-        if [[ "$1" == "upgrade" || "$1" == "outdated" ]]; then
-            ~/Scripts/updateBrewOutdated
-        fi
-    }
-fi
 
 # sourced configs
 source ~/bin/pwdt

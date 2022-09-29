@@ -6,5 +6,7 @@ To have most apps setup up and running, simply execute `install_software.sh`, wh
 
 To install most dotfiles, simply run the `configure_dotfiles.sh` script. It'll not override existing files unless `-f` is used, and performs a soft link rather than copy the files for easier maintainence.
 
+To apply some basic system tweaks, run the `configure_system.sh` script.
+
 Caveats:
-- Terminal setup requires installing [MesloLGM Nerd Font Mono](https://github.com/ryanoasis/nerd-fonts/tree/master/patched-fonts/Meslo/M) and manual import of `iTermProfile.json` into iTerm2.
+- Manual installation required for items in the `others` directory.
