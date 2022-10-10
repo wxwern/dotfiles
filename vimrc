@@ -17,6 +17,8 @@ set wildmenu  "show menu when using tab to autocomplete and other areas
 set clipboard=unnamed          "clipboard sync
 set backspace=indent,eol,start "make backspace work
 set t_Co=256                   "set colour
+set secure  " Don't let external configs do scary stuff
+set exrc    " Load local vimrc if found
 set cursorline
 set signcolumn=number
 set updatetime=500
@@ -67,7 +69,8 @@ let g:airline#extensions#ale#enabled = 1
 nmap <silent> gk <Plug>(ale_previous_wrap)
 nmap <silent> gj <Plug>(ale_next_wrap)
 
-Plug 'neoclide/coc.nvim', {'branch': 'release', 'commit': '0f13f07dea8a06dd93718c0b559fc8dc3dc61fc6' }
+" coc
+Plug 'neoclide/coc.nvim', {'branch': 'release' }
 
 " GoTo code navigation.
 nmap <silent> gd <Plug>(coc-definition)
@@ -152,6 +155,9 @@ nnoremap <silent> <expr> <C-p> (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : ''
 
 " Comment toggling
 Plug 'tpope/vim-commentary'
+
+" Xcode building and testing
+Plug 'gfontenot/vim-xcode'
 
 " Setup NERDTree
 if g:remoteSession

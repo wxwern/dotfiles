@@ -20,6 +20,10 @@ ctrl + alt + cmd - r : \
     open /Applications/Übersicht.app; \
     osascript -e 'tell application id 'tracesof.Uebersicht' to activate';
 
+ctrl + alt + cmd - p : \
+    yabai -m query --windows --window | jq -e ".\"is-floating\" == false and .\"is-topmost\" == true" && yabai -m window --toggle topmost; \
+    terminal-notifier -title "Updated bsp window properties" -message "Any errors with the currently focused window properties were patched." -ignoreDnD;
+
 
 # quick access scripts
 ctrl + alt + cmd - h: /Users/LWJ/Scripts/join_discord_home.sh

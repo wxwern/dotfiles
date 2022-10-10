@@ -53,7 +53,8 @@ yabai -m signal --add event=mission_control_exit action="$REL_BAR_IND"
 echo "configuring exceptions"
 
 # - auto un-topmost any bsp window
-yabai -m signal --add event=window_focused action='yabai -m query --windows --window $YABAI_WINDOW_ID | jq -e ".\"is-floating\" == false and .\"is-topmost\" == true" && yabai -m window $YABAI_WINDOW_ID --toggle topmost'
+UNTOPMOST_BSP_FIX='yabai -m query --windows --window $YABAI_WINDOW_ID | jq -e ".\"is-floating\" == false and .\"is-topmost\" == true" && yabai -m window $YABAI_WINDOW_ID --toggle topmost'
+yabai -m signal --add event=window_focused action="$UNTOPMOST_BSP_FIX"
 
 # - float if window is not resizable
 CHECK_COND_FORCE='yabai -m query --windows --window $YABAI_WINDOW_ID | jq -er ".\"can-resize\" == false and .\"is-floating\" == false"'
@@ -62,7 +63,7 @@ FLOAT_FORCE='yabai -m window $YABAI_WINDOW_ID --toggle float --move abs:$pos_x:$
 yabai -m signal --add event=window_created action="$CHECK_COND_FORCE && $POS_FORCE_VAR && $FLOAT_FORCE"
 
 # - focus some window on space if destroyed
-FOCUS_ON_DESTORY='yabai -m query --spaces --space | jq '."first-window"' | xargs -I {} yabai -m window --focus {} || true'
+FOCUS_ON_DESTORY='yabai -m query --spaces --space | jq ".\"first-window\"" | xargs -I {} yabai -m window --focus {} || true'
 yabai -m signal --add event=window_destroyed action="$FOCUS_ON_DESTORY"
 
 
@@ -89,7 +90,7 @@ yabai -m rule --add app="^Übersicht$" manage=off
 yabai -m rule --add app="^FaceTime$" layer=above manage=off sticky=on
 yabai -m rule --add app="^TimeMachineEditor$" manage=off
 yabai -m rule --add app="^NTFS for Mac$" manage=off
-yabai -m rule --add app="^(QuickTime Player|mpv)$" manage=off
+yabai -m rule --add app="^(QuickTime Player|mpv|IINA)$" manage=off
 
 # - for windows that aren't windows
 yabai -m rule --add app!="^(Xcode)$" title="^$" layer=above manage=off border=off
