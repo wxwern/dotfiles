@@ -21,12 +21,16 @@ yabai -m config \
     window_border off \
     window_animation_duration 0.0
 
-# configure clarity signals
+# configure clarity updates
 echo "configuring clarity signals"
 REL_SPACES_IND="osascript -e 'tell application id \"tracesof.Uebersicht\" to refresh widget id \"clarity-spaces-jsx\"'"
 REL_BAR_IND="osascript -e 'tell application id \"tracesof.Uebersicht\" to refresh widget id \"clarity-bar-jsx\"'"
+
+# - if space indicators are enabled
 yabai -m signal --add event=space_changed   action="$REL_SPACES_IND"
 yabai -m signal --add event=display_changed action="$REL_SPACES_IND"
+yabai -m signal --add event=mission_control_exit action="$REL_SPACES_IND"
+# - if app icon indicators within space indicators are enabled
 yabai -m signal --add event=window_created   action="$REL_SPACES_IND"
 yabai -m signal --add event=window_moved     action="$REL_SPACES_IND"
 yabai -m signal --add event=window_resized   action="$REL_SPACES_IND"
@@ -35,10 +39,12 @@ yabai -m signal --add event=window_minimized   action="$REL_SPACES_IND"
 yabai -m signal --add event=window_deminimized action="$REL_SPACES_IND"
 yabai -m signal --add event=application_hidden action="$REL_SPACES_IND"
 yabai -m signal --add event=application_visible action="$REL_SPACES_IND"
-yabai -m signal --add event=mission_control_exit action="$REL_SPACES_IND"
 
+# - if center space indicators are enabled
 yabai -m signal --add event=space_changed    action="$REL_BAR_IND"
 yabai -m signal --add event=display_changed  action="$REL_BAR_IND"
+yabai -m signal --add event=mission_control_exit action="$REL_BAR_IND"
+# - if wallpaper blur is enabled
 yabai -m signal --add event=window_created   action="$REL_BAR_IND"
 yabai -m signal --add event=window_moved     action="$REL_BAR_IND"
 yabai -m signal --add event=window_resized   action="$REL_BAR_IND"
@@ -47,7 +53,10 @@ yabai -m signal --add event=window_minimized   action="$REL_BAR_IND"
 yabai -m signal --add event=window_deminimized action="$REL_BAR_IND"
 yabai -m signal --add event=application_hidden action="$REL_BAR_IND"
 yabai -m signal --add event=application_visible action="$REL_BAR_IND"
-yabai -m signal --add event=mission_control_exit action="$REL_BAR_IND"
+
+# refresh immediately on yabai load
+osascript -e "$REL_SPACES_IND"
+osascript -e "$REL_BAR_IND"
 
 # exceptions to apps and things that tend to not work well
 echo "configuring exceptions"
@@ -63,7 +72,7 @@ FLOAT_FORCE='yabai -m window $YABAI_WINDOW_ID --toggle float --move abs:$pos_x:$
 yabai -m signal --add event=window_created action="$CHECK_COND_FORCE && $POS_FORCE_VAR && $FLOAT_FORCE"
 
 # - focus some window on space if destroyed
-FOCUS_ON_DESTORY='yabai -m query --spaces --space | jq ".\"first-window\"" | xargs -I {} yabai -m window --focus {} || true'
+FOCUS_ON_DESTORY='sleep 0.5 && (yabai -m query --windows --window || (yabai -m query --spaces --space | jq ".\"first-window\"" | xargs -I {} yabai -m window --focus {} || true))'
 yabai -m signal --add event=window_destroyed action="$FOCUS_ON_DESTORY"
 
 
@@ -72,7 +81,7 @@ EXCLUDE_ROLES_REGEX="^(AXMenu|AXSheet|AXDialog|AXSystemDialog|AXFloatingWindow|A
 yabai -m rule --add role="$EXCLUDE_ROLES_REGEX" layer=above manage=off border=off
 yabai -m rule --add subrole="$EXCLUDE_ROLES_REGEX" layer=above manage=off border=off
 yabai -m rule --add title="^Preferences$" layer=above manage=off
-yabai -m rule --add app="^(Settings|System Preferences)$" layer=above manage=off
+yabai -m rule --add app="^(System Settings|System Preferences)$" layer=above manage=off
 yabai -m rule --add title="^Problem Report for" layer=above manage=off
 yabai -m rule --add app="^iStat Menus" manage=off
 yabai -m rule --add app="^Finder$" title="^(Move|Copy|Delete|Connecting to Server)$" layer=above manage=off
@@ -89,12 +98,13 @@ yabai -m rule --add app="^Delete Apps$" manage=off
 yabai -m rule --add app="^Übersicht$" manage=off
 yabai -m rule --add app="^FaceTime$" layer=above manage=off sticky=on
 yabai -m rule --add app="^TimeMachineEditor$" manage=off
+yabai -m rule --add app="^Mac Mouse Fix$" manage=off border=off
 yabai -m rule --add app="^NTFS for Mac$" manage=off
 yabai -m rule --add app="^(QuickTime Player|mpv|IINA)$" manage=off
+yabai -m rule --add app="^(Time Machine)$" manage=off
 
 # - for windows that aren't windows
-yabai -m rule --add app!="^(Xcode)$" title="^$" layer=above manage=off border=off
-#yabai -m rule --add app="^(Telegram|Calendar|Microsoft(.*))$" title="^$" layer=above manage=off
+yabai -m rule --add app!="^(Xcode|Finder)$" title="^$" layer=above manage=off border=off
 
 #layouts
 echo "configuring layouts and appearance"
@@ -111,7 +121,7 @@ yabai -m config \
     window_origin_display cursor \
     window_topmost on \
     window_shadow float \
-    window_border on \
+    window_border off \
     window_border_width 2 \
     window_border_radius 11 \
     window_border_blur off \
@@ -124,7 +134,7 @@ yabai -m config \
     split_type auto \
     auto_balance off \
     layout bsp \
-    window_animation_duration 0.1
+    window_animation_duration 0.0
 
 # done
 echo "yabai config is now loaded."

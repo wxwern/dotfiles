@@ -13,7 +13,7 @@ ctrl + alt + cmd - r : \
     killall Finder; \
     kill -9 $(pgrep bersicht); \
     killall Dock; \
-    sleep 1; \
+    sleep 3; \
     launchctl kickstart -k "gui/${UID}/homebrew.mxcl.yabai"; \
     skhd -r; \
     sleep 1; \
@@ -21,13 +21,16 @@ ctrl + alt + cmd - r : \
     osascript -e 'tell application id 'tracesof.Uebersicht' to activate';
 
 ctrl + alt + cmd - p : \
-    yabai -m query --windows --window | jq -e ".\"is-floating\" == false and .\"is-topmost\" == true" && yabai -m window --toggle topmost; \
+    yabai -m query --windows --window | jq -e ".\"is-floating\" == .\"is-topmost\"" || \
+    yabai -m window --toggle topmost; \
     terminal-notifier -title "Updated bsp window properties" -message "Any errors with the currently focused window properties were patched." -ignoreDnD;
-
 
 # quick access scripts
 ctrl + alt + cmd - h: /Users/LWJ/Scripts/join_discord_home.sh
 ctrl + alt + cmd - e: /Users/LWJ/Scripts/undock.sh
+ctrl + alt + cmd - m: \
+    killall MonitorControl; open /Applications/MonitorControl.app/; \
+    terminal-notifier -title "MonitorControl Restarted" -message "MonitorControl.app is restarted." -ignoreDnD;
 ctrl + alt + cmd - t: \
     if [[ "$(pmset -g batt | grep 'AC Power')" ]]; then \
         if [[ "$(pmset -g | grep 'lowpowermode' | tail -c 2)" == "0" ]]; then \
@@ -48,7 +51,7 @@ ctrl + alt + cmd - t: \
     fi; \
     osascript -e "tell application id \"tracesof.uebersicht\" to refresh widget id \"clarity-status-jsx\"";
 
-# launch handoff app with alt tab
+# launch handoff app with alt tab (graceful return if none)
 alt - 0x30: \
     terminal-notifier -title "Handoff" -message "Launching task via handoff (if possible)..." -ignoreDnD; \
     osascript -e "tell application \"System Events\"" \
@@ -60,38 +63,32 @@ alt - 0x30: \
     -e "key up shift" \
     -e "delay 0.2" \
     -e "keystroke tab" \
-    -e "key up shift" \
     -e "key up command" \
--e "end tell"
+    -e "end tell"
 
 # toggle yabai layout modes
 ctrl + alt + cmd - f : \
-    if [[ "$(yabai -m query --spaces --space | jq -r '.type')" == "bsp" ]]; then \
-        yabai -m space --layout float; \
-        terminal-notifier -title "yabai layout for current space toggled" -subtitle "currently: float" -ignoreDnD; \
-        osascript -e 'tell application id "tracesof.Uebersicht" to refresh widget id "clarity-bar-jsx"'; \
-    else \
+    if [[ "$(yabai -m query --spaces --space | jq -r '.type')" == "float" ]]; then \
         yabai -m space --layout bsp; \
         terminal-notifier -title "yabai layout for current space toggled" -subtitle "currently: bsp" -ignoreDnD; \
         osascript -e 'tell application id "tracesof.Uebersicht" to refresh widget id "clarity-bar-jsx"'; \
+    else \
+        yabai -m space --layout float; \
+        terminal-notifier -title "yabai layout for current space toggled" -subtitle "currently: float" -ignoreDnD; \
+        osascript -e 'tell application id "tracesof.Uebersicht" to refresh widget id "clarity-bar-jsx"'; \
     fi;
 
-# toggle yabai padding
-fn + ctrl + alt + cmd - p : yabai -m space --toggle padding --toggle gap;
-ctrl + alt + cmd - p : \
-    if [[ "$(yabai -m config top_padding)" == "4" ]]; then \
-        yabai -m config top_padding 128 \
-                        left_padding 128 \
-                        right_padding 128 \
-                        bottom_padding 128 \
-                        window_gap 128; \
+ctrl + alt + cmd - s : \
+    if [[ "$(yabai -m query --spaces --space | jq -r '.type')" == "stack" ]]; then \
+        yabai -m space --layout bsp; \
+        terminal-notifier -title "yabai layout for current space toggled" -subtitle "currently: bsp" -ignoreDnD; \
+        osascript -e 'tell application id "tracesof.Uebersicht" to refresh widget id "clarity-bar-jsx"'; \
     else \
-        yabai -m config top_padding 4 \
-                        left_padding 4 \
-                        right_padding 4 \
-                        bottom_padding 4 \
-                        window_gap 6; \
+        yabai -m space --layout stack; \
+        terminal-notifier -title "yabai layout for current space toggled" -subtitle "currently: stack" -ignoreDnD; \
+        osascript -e 'tell application id "tracesof.Uebersicht" to refresh widget id "clarity-bar-jsx"'; \
     fi;
+
 
 # toggle window border
 fn + ctrl - b : yabai -m window --toggle border;
@@ -109,7 +106,7 @@ shift + ctrl + cmd - f : \
         yabai -m window \
             --toggle sticky \
             --grid 5:5:2:2:2:2; \
-        terminal-notifier -title "Sticky Window: Off" -subtitle "Window is no longer." -ignoreDnD; \
+        terminal-notifier -title "Sticky Window: Off" -subtitle "Window is no longer sticky." -ignoreDnD; \
     else \
         yabai -m window \
             --toggle sticky \
@@ -126,6 +123,20 @@ ctrl + alt - up    : yabai -m window --focus north || yabai -m display --focus n
 ctrl + alt - down  : yabai -m window --focus south || yabai -m display --focus south
 ctrl + alt - left  : yabai -m window --focus west  || yabai -m space --focus prev || yabai -m display --focus west
 ctrl + alt - right : yabai -m window --focus east  || yabai -m space --focus next || yabai -m display --focus east
+
+# toggle focus between floating and non-floating windows
+ctrl + alt - z : \
+    CURR_WINS_SPACE=$(yabai -m query --windows --space); \
+    CURR_WIN_FOCUSED=$(yabai -m query --windows --window); \
+    if printf "$CURR_WIN_FOCUSED" | jq -e '."is-floating"'; then \
+        TARGET_ID=$(printf "$CURR_WINS_SPACE" | jq '[.[] | select(.["is-floating"] == false)] | map(.id) | first(.[])'); \
+    else \
+        TARGET_ID=$(printf "$CURR_WINS_SPACE" | jq '[.[] | select(.["is-floating"] == true)] | map(.id) | first(.[])'); \
+    fi; \
+    if [ -n "$TARGET_ID" ]; then \
+        yabai -m window --focus "$TARGET_ID"; \
+    fi;
+
 
 # equalize all windows
 ctrl + alt - b : yabai -m space --balance

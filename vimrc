@@ -57,8 +57,8 @@ Plug 'evanleck/vim-svelte', {'branch': 'main'}
 
 " Setup ALE
 Plug 'dense-analysis/ale'
-let g:ale_c_gcc_executable = 'gcc-11'
-let g:ale_cpp_gcc_executable = 'gcc-11'
+let g:ale_c_gcc_executable = 'gcc-12'
+let g:ale_cpp_gcc_executable = 'gcc-12'
 let g:ale_echo_msg_error_str = 'ERR'
 let g:ale_echo_msg_warning_str = 'WARN'
 let g:ale_python_pylint_options = '--rcfile=/Users/LWJ/.pylintrc'
@@ -91,8 +91,8 @@ nmap <leader>rn <Plug>(coc-rename)
 if has('nvim')
   Plug 'github/copilot.vim'
   " cycle copilot suggestions
-  inoremap <C-[> <Plug>(copilot-previous)
-  inoremap <C-]> <Plug>(copilot-next)
+  "inoremap <C-[> <Plug>(copilot-previous)
+  "inoremap <C-]> <Plug>(copilot-next)
 endif
 
 " Return to previous location on reopen.
@@ -161,23 +161,9 @@ Plug 'gfontenot/vim-xcode'
 
 " Setup NERDTree
 if g:remoteSession
-  Plug 'preservim/nerdtree' |
-        \ Plug 'Xuyuanp/nerdtree-git-plugin'
 else
-  Plug 'preservim/nerdtree' |
-        \ Plug 'Xuyuanp/nerdtree-git-plugin' |
-        \ Plug 'ryanoasis/vim-devicons'
+  Plug 'ryanoasis/vim-devicons'
 endif
-
-" Open the existing NERDTree on each new tab.
-autocmd BufWinEnter * if getcmdwintype() == '' | silent NERDTreeMirror | endif
-" Exit Vim if NERDTree is the only window remaining in the only tab.
-autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | quit | endif
-" Close the tab if NERDTree is the only window remaining in it.
-autocmd BufEnter * if winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | quit | endif
-
-" Discord Rich Presence
-Plug 'vimsence/vimsence'
 
 call plug#end()
 
@@ -216,6 +202,9 @@ augroup END
 " Use actual tab chars in Makefiles.
 autocmd FileType make set tabstop=8 shiftwidth=8 softtabstop=0 noexpandtab
 
+" Show tabs, spaces and newlines in whitespace files (.ws)
+autocmd FileType *.ws set tabstop=8 shiftwidth=8 softtabstop=0 noexpandtab list listchars=tab:»\ ,trail:·,nbsp:·,eol:¬
+
 " helper tab width as spaces count (does not auto reindent)
 function SetTabWidth(n)
   exe 'set tabstop='.a:n
@@ -234,6 +223,7 @@ autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
 
 " set the color scheme at the end
 colorscheme codedark
+
 
 " remove bg from colorscheme
 autocmd vimenter * hi EndOfBuffer ctermbg=none

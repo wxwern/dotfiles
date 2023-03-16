@@ -1,5 +1,8 @@
 # custom prompts if login session
 if [[ -o login ]]; then
+
+    printf '\n\033[0;1;196mWelcome, Wern.\033[0m\n'
+
     # brew upgrade reminders
     outdated_motd="$(cat ~/tmp/brew_outdated_motd.txt)"
     if [[ -n "$outdated_motd" ]]; then
@@ -12,6 +15,8 @@ if [[ -o login ]]; then
         fi
     }
 fi
+
+source ~/bin/pwdt
 
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
@@ -201,8 +206,8 @@ docker() {
     scp -P "${3:-22}" -r "${2:-stu.comp.nus.edu.sg}":~/CS2030S/"$1" ~/Projects/CS2030S_Final/ &&
     cd ~/Projects/CS2030S_Final/"$1" &&
     echo &&
-    echo "Clearing *.class files..." &&
-    (rm -r *.class || true) &&
+    echo "Clearing **/*.class files..." &&
+    (rm -r **/*.class || true) &&
     echo &&
     echo "Now at ~/Projects/CS2030S_Final/$1/"
   fi
@@ -212,9 +217,11 @@ docker() {
   if [[ -z "$1" ]]; then
     echo "Usage: 2030upload <Lab#> [username@domain] [port]"
   else
+    tmp_pwd="$(pwd)"
     echo "Now at ~/Projects/CS2030S_Final/" &&
     cd ~/Projects/CS2030S_Final/ &&
     scp -P "${3:-22}" -r "./$1" "${2:-stu.comp.nus.edu.sg}":~/CS2030S/
+    cd "$tmp_pwd"
   fi
 }
 
@@ -233,7 +240,6 @@ setopt histignorespace
 
 
 # sourced configs
-source ~/bin/pwdt
 source ~/bin/hoard
 
 #export PATH="/usr/local/opt/zip/bin:$PATH"
