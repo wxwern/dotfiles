@@ -131,10 +131,13 @@ yabai -m config \
     window_opacity               off \
     active_window_opacity        1.0 \
     normal_window_opacity        1.0 \
+    window_zoom_persist off \
     split_type auto \
     auto_balance off \
     layout bsp \
-    window_animation_duration 0.0
+    window_animation_duration 0.0 \
+    window_animation_frame_rate 60
+
 
 # done
 echo "yabai config is now loaded."

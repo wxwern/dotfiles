@@ -61,7 +61,7 @@ let g:ale_c_gcc_executable = 'gcc-12'
 let g:ale_cpp_gcc_executable = 'gcc-12'
 let g:ale_echo_msg_error_str = 'ERR'
 let g:ale_echo_msg_warning_str = 'WARN'
-let g:ale_python_pylint_options = '--rcfile=/Users/LWJ/.pylintrc'
+let g:ale_python_pylint_options = '--rcfile=~/.pylintrc'
 let g:ale_echo_msg_format = '[%severity%] %linter%: %s'
 let g:airline#extensions#ale#enabled = 1
 

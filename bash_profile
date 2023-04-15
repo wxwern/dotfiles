@@ -51,3 +51,4 @@ echo && neofetch --logo #neofetch --disable term
 export PATH=$HOME/bin:$PATH
 source ~/bin/pwdt
 source ~/bin/hoard
+. "$HOME/.cargo/env"

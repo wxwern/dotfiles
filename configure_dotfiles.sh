@@ -49,9 +49,6 @@ import "p10k.zsh" $1
 echo
 echo "Dotfiles linkage complete."
 echo
-echo "Dependencies are referenced within the dotfiles."
-echo "If prompted, they may be missing and should be installed."
-echo
 
 #
 # --- Dependencies ---
@@ -60,9 +57,13 @@ echo
 # referenced within the dotfiles.
 #
 
+echo "Some critical dependencies are referenced within the dotfiles."
+echo "Critical dependencies that are possibly missing will be prompted for installation."
+echo
+
 # install oh-my-zsh?
 if [ ! -d ~/.oh-my-zsh ]; then
-    read -p "Install oh-my-zsh? (y/n) " -n 1 -r
+    read -p "Install oh-my-zsh? (y/N) " -n 1 -r
     if [[ $REPLY =~ ^[Yy]$ ]]
     then
         echo "Installing oh-my-zsh"
@@ -71,8 +72,8 @@ if [ ! -d ~/.oh-my-zsh ]; then
 fi
 
 # install powerlevel10k?
-if [ ! -d ~/.oh-my-zsh/custom/themes/powerlevel10k ]; then
-    read -p "Install powerlevel10k? (y/n) " -n 1 -r
+if [ -d ~/.oh-my-zsh && ! -d ~/.oh-my-zsh/custom/themes/powerlevel10k ]; then
+    read -p "Install powerlevel10k? (y/N) " -n 1 -r
     if [[ $REPLY =~ ^[Yy]$ ]]
     then
         echo "Installing powerlevel10k"
@@ -82,7 +83,7 @@ fi
 
 # install vim-plug?
 if [ ! -f ~/.vim/autoload/plug.vim ]; then
-    read -p "Install vim-plug? (y/n) " -n 1 -r
+    read -p "Install vim-plug? (y/N) " -n 1 -r
     if [[ $REPLY =~ ^[Yy]$ ]]
     then
         if [ ! -f ~/.vim/autoload/plug.vim ]; then
@@ -97,7 +98,7 @@ if [ ! -f ~/.vim/autoload/plug.vim ]; then
 
 
         # install vim plugins?
-        read -p "Install vim plugins? (y/n) " -n 1 -r
+        read -p "Install vim plugins? (y/N) " -n 1 -r
         if [[ $REPLY =~ ^[Yy]$ ]]
         then
             echo "Installing plugins into vim & nvim"

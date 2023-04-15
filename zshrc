@@ -25,11 +25,9 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-# If you come from bash you might have to change your $PATH.
-export PATH=$HOME/bin:/usr/local/bin:$PATH
 
 # Path to your oh-my-zsh installation.
-export ZSH="/Users/LWJ/.oh-my-zsh"
+export ZSH="$HOME/.oh-my-zsh"
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
@@ -76,7 +74,7 @@ COMPLETION_WAITING_DOTS="true"
 # "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
 # or set a custom format using the strftime function format specifications,
 # see 'man strftime' for details.
-# HIST_STAMPS="mm/dd/yyyy"
+HIST_STAMPS="yyyy-mm-dd"
 
 # Which plugins would you like to load?
 # Standard plugins can be found in ~/.oh-my-zsh/plugins/*
@@ -92,13 +90,48 @@ plugins=(git python macos zsh-autosuggestions zsh-syntax-highlighting)
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
+# ZSH: Do not include commands with trailing spaces into history
+setopt histignorespace
+
 # User configuration
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 
 export MANPATH="/usr/local/man:$MANPATH"
 
-#Plugin config
+# Homebrew and misc
+export PATH=$HOME/bin:/usr/local/bin:/opt/homebrew/bin:$PATH
+
+# Rust cargo
+. "$HOME/.cargo/env"
+
+# Golang
+export PATH="$HOME/go/bin:$PATH"
+
+# Ruby
+#export PATH="/usr/local/opt/ruby/bin:$PATH"
+#export LDFLAGS="-L/usr/local/opt/ruby/lib"
+#export CPPFLAGS="-I/usr/local/opt/ruby/include"
+#export PKG_CONFIG_PATH="/usr/local/opt/ruby/lib/pkgconfig"
+
+# include linux utils
+export PATH="/usr/local/opt/util-linux/bin:$PATH"
+export PATH="/usr/local/opt/util-linux/sbin:$PATH"
+export LDFLAGS="-L/usr/local/opt/util-linux/lib"
+export CPPFLAGS="-I/usr/local/opt/util-linux/include"
+export PKG_CONFIG_PATH="/usr/local/opt/util-linux/lib/pkgconfig"
+
+# Android
+export ANDROID_HOME=/Users/$USER/Library/Android/sdk
+export PATH=${PATH}:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
+export ANDROID_SDK=$HOME/Library/Android/sdk
+export ANDROID_NDK_HOME=$HOME/Library/Android/sdk/ndk/21.3.6528147/
+export PATH=$ANDROID_SDK/emulator:$ANDROID_SDK/tools:$PATH
+
+# fastlane
+export PATH="$HOME/.fastlane/bin:$PATH"
+
+# Plugin config
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#606060"
 export ZSH_AUTOSUGGEST_STRATEGY=(match_prev_cmd completion)
 export ZSH_AUTOSUGGEST_USE_ASYNC=1
@@ -113,51 +146,11 @@ else
   export EDITOR='nvim'
 fi
 
-#replace macos utils with gnu utils
-#export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
-#export PATH="/usr/local/opt/cross/arm-linux:$PATH"
-
-# include linux utils
-export PATH="/usr/local/opt/util-linux/bin:$PATH"
-export PATH="/usr/local/opt/util-linux/sbin:$PATH"
-export LDFLAGS="-L/usr/local/opt/util-linux/lib"
-export CPPFLAGS="-I/usr/local/opt/util-linux/include"
-export PKG_CONFIG_PATH="/usr/local/opt/util-linux/lib/pkgconfig"
-
-# android
-export ANDROID_HOME=/Users/$USER/Library/Android/sdk
-export PATH=${PATH}:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
-export ANDROID_SDK=$HOME/Library/Android/sdk
-export ANDROID_NDK_HOME=$HOME/Library/Android/sdk/ndk/21.3.6528147/
-export PATH=$ANDROID_SDK/emulator:$ANDROID_SDK/tools:$PATH
-
-# c4ev3
-export PATH=~/Repositories/c4ev3/c4ev3-gcc-2018-05-15.macOS/bin/:$PATH
-
-# Setting PATH for Python 3.8
-export PATH="/Library/Frameworks/Python.framework/Versions/3.9/bin:${PATH}"
-export PATH="/Users/LWJ/Library/Python/3.9/bin:${PATH}"
-
-# fastlane
-export PATH="$HOME/.fastlane/bin:$PATH"
-
 # fzf
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
-# golang
-export PATH="$HOME/go/bin:$PATH"
-
-# ruby from homebrew
-#export PATH="/usr/local/opt/ruby/bin:$PATH"
-#export LDFLAGS="-L/usr/local/opt/ruby/lib"
-#export CPPFLAGS="-I/usr/local/opt/ruby/include"
-#export PKG_CONFIG_PATH="/usr/local/opt/ruby/lib/pkgconfig"
-
 # homebrew config
 export HOMEBREW_NO_AUTO_UPDATE=1
-
-# force macos 11 reporting
-export SYSTEM_VERSION_COMPAT=0
 
 # colors!!!!
 export CLICOLOR=1
@@ -178,15 +171,9 @@ export TERM="xterm-256color"
 # For a full list of active aliases, run `alias`.
 
 alias vim="echo 'note: using nvim'; nvim" # use nvim instead of vim, old habits die hard
+alias ctfvm="limactl shell ctfvm"
 alias tetris="autoload -Uz tetriscurses && tetriscurses"
-alias kali-vm='(echo "Starting VM..." && vmrun -T fusion start ~/Documents/VMWare/Kali\ Linux.vmwarevm nogui && echo "Connecting via SSH...") && ssh kali@kali.local'
-alias ev3='~/Repositories/internal/c4ev3/ev3duder/ev3duder'
-alias ev3upload='~/Repositories/internal/c4ev3/scripts/ev3upload'
-alias ev3build='~/Repositories/internal/c4ev3/scripts/ev3build'
-alias ev3buildUpload='~/Repositories/internal/c4ev3/scripts/ev3buildUpload'
-alias mcmodvchange="'/Users/LWJ/Library/Application Support/minecraft/mods_change.sh'"
 alias obsbrowsercam="/Applications/OBS.app/Contents/MacOS/obs --enable-gpu --use-fake-ui-for-media-stream >> /dev/null 2>&1"
-alias xcSimStatusOverride='xcrun simctl status_bar booted override --time "9:41 AM" --batteryState charged --batteryLevel 100 --wifiMode active --wifiBars 3 --cellularMode active --cellularBars 4 --operatorName ""'
 
 docker() {
   echo "running docker command as nerdctl via lima-vm"
@@ -194,54 +181,29 @@ docker() {
   lima nerdctl "$@"
 }
 
-2030download() {
-  if [[ -z "$1" ]]; then
-    echo "Usage: 2030download <Lab#> [username@domain] [port]"
-  else
-    mkdir -p ~/Projects/CS2030S_Final/
-    echo "Clearing ~/Projects/CS2030S_Final/$1/"
-    echo
-    rm -r ~/Projects/CS2030S_Final/"$1"/
-    echo "Downloading from server..."
-    scp -P "${3:-22}" -r "${2:-stu.comp.nus.edu.sg}":~/CS2030S/"$1" ~/Projects/CS2030S_Final/ &&
-    cd ~/Projects/CS2030S_Final/"$1" &&
-    echo &&
-    echo "Clearing **/*.class files..." &&
-    (rm -r **/*.class || true) &&
-    echo &&
-    echo "Now at ~/Projects/CS2030S_Final/$1/"
-  fi
-}
-
-2030upload() {
-  if [[ -z "$1" ]]; then
-    echo "Usage: 2030upload <Lab#> [username@domain] [port]"
-  else
-    tmp_pwd="$(pwd)"
-    echo "Now at ~/Projects/CS2030S_Final/" &&
-    cd ~/Projects/CS2030S_Final/ &&
-    scp -P "${3:-22}" -r "./$1" "${2:-stu.comp.nus.edu.sg}":~/CS2030S/
-    cd "$tmp_pwd"
-  fi
-}
-
 proctorScreenRec() {
     ffmpeg -f avfoundation -r 1 -probesize 20M -threads 1 -i "$(ffmpeg -f avfoundation -list_devices true -i "" 2>&1 | grep "Capture screen" | cut -d ' ' -f 5 | cut -c 2):" -vcodec libx264 -b:v 128k -s hd1080 ~/Desktop/proctor_screenrec_$(date +"%Y%m%d_%H%M%S").mp4
 }
+
 ctf() {
+    echo "Setting Up CTF environment..."
+
     alias ls='ls -lGa'
     PATH=$HOME/CTF/Tools/bin:$PATH
     cd ~/CTF
 }
-alias ll='ls -lGa'
 
-# zsh ignore spaces
-setopt histignorespace
+gnuify() {
+    echo "Including GNU utils in PATH (replaces macOS utils if present)"
+    echo "*** Warning: Stuff dependent on system utils might break! ***"
 
+    export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
+    export PATH="/usr/local/opt/cross/arm-linux:$PATH"
+}
+
+xcSimStatusOverride() {
+    xcrun simctl status_bar booted override --time "9:41 AM" --batteryState charged --batteryLevel 100 --wifiMode active --wifiBars 3 --cellularMode active --cellularBars 4 --operatorName ""
+}
 
 # sourced configs
 source ~/bin/hoard
-
-#export PATH="/usr/local/opt/zip/bin:$PATH"
-#export PATH="/usr/local/opt/unzip/bin:$PATH"
-

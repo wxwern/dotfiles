@@ -26,8 +26,8 @@ ctrl + alt + cmd - p : \
     terminal-notifier -title "Updated bsp window properties" -message "Any errors with the currently focused window properties were patched." -ignoreDnD;
 
 # quick access scripts
-ctrl + alt + cmd - h: /Users/LWJ/Scripts/join_discord_home.sh
-ctrl + alt + cmd - e: /Users/LWJ/Scripts/undock.sh
+ctrl + alt + cmd - h: ~/Scripts/join_discord_home.sh
+ctrl + alt + cmd - e: ~/Scripts/undock.sh
 ctrl + alt + cmd - m: \
     killall MonitorControl; open /Applications/MonitorControl.app/; \
     terminal-notifier -title "MonitorControl Restarted" -message "MonitorControl.app is restarted." -ignoreDnD;
@@ -278,7 +278,7 @@ ctrl + cmd - t : \
     osascript -e 'if application "iTerm" is not running then tell application "iTerm" to activate' && \
     osascript -e 'tell application "iTerm" to create window with default profile'
 shift + ctrl + cmd - t : \
-    osascript -e 'tell application "Finder" to make new Finder window to folder "Macintosh HD:Users:LWJ:"' && \
+    osascript -e 'tell application "Finder" to make new Finder window to folder "Macintosh HD:Users:wern:"' && \
     osascript -e 'tell application "Finder" to activate'
 
 fn - c: skhd -k "ctrl - f2"
