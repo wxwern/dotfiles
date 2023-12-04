@@ -24,7 +24,13 @@ defaults write com.apple.dock appswitcher-all-displays -bool true
 killall Dock
 # ---
 
+# --- GUI Operations ---
+# Hide ugly center popup
+launchctl unload -wF /System/Library/LaunchAgents/com.apple.OSDUIHelper.plist
+# ---
+
 # Install Fonts
 echo "Installing fonts (user level)..."
 cp -r fonts/* ~/Library/Fonts/
+
 

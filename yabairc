@@ -18,7 +18,6 @@ for i in $(yabai -m rule --list | jq '.[].index'); do
     yabai -m rule --remove 0;
 done
 yabai -m config \
-    window_border off \
     window_animation_duration 0.0
 
 # configure clarity updates
@@ -28,8 +27,9 @@ REL_BAR_IND="osascript -e 'tell application id \"tracesof.Uebersicht\" to refres
 
 # - if space indicators are enabled
 yabai -m signal --add event=space_changed   action="$REL_SPACES_IND"
+yabai -m signal --add event=space_created   action="$REL_SPACES_IND"
+yabai -m signal --add event=space_destroyed action="$REL_SPACES_IND"
 yabai -m signal --add event=display_changed action="$REL_SPACES_IND"
-yabai -m signal --add event=mission_control_exit action="$REL_SPACES_IND"
 # - if app icon indicators within space indicators are enabled
 yabai -m signal --add event=window_created   action="$REL_SPACES_IND"
 yabai -m signal --add event=window_moved     action="$REL_SPACES_IND"
@@ -41,9 +41,10 @@ yabai -m signal --add event=application_hidden action="$REL_SPACES_IND"
 yabai -m signal --add event=application_visible action="$REL_SPACES_IND"
 
 # - if center space indicators are enabled
+yabai -m signal --add event=space_created    action="$REL_BAR_IND"
 yabai -m signal --add event=space_changed    action="$REL_BAR_IND"
+yabai -m signal --add event=space_destroyed    action="$REL_BAR_IND"
 yabai -m signal --add event=display_changed  action="$REL_BAR_IND"
-yabai -m signal --add event=mission_control_exit action="$REL_BAR_IND"
 # - if wallpaper blur is enabled
 yabai -m signal --add event=window_created   action="$REL_BAR_IND"
 yabai -m signal --add event=window_moved     action="$REL_BAR_IND"
@@ -53,17 +54,21 @@ yabai -m signal --add event=window_minimized   action="$REL_BAR_IND"
 yabai -m signal --add event=window_deminimized action="$REL_BAR_IND"
 yabai -m signal --add event=application_hidden action="$REL_BAR_IND"
 yabai -m signal --add event=application_visible action="$REL_BAR_IND"
+yabai -m signal --add event=mission_control_exit action="$REL_BAR_IND"
 
 # refresh immediately on yabai load
-osascript -e "$REL_SPACES_IND"
-osascript -e "$REL_BAR_IND"
+echo "reloading widgets"
+sh -c "$REL_SPACES_IND"
+sh -c "$REL_BAR_IND"
 
 # exceptions to apps and things that tend to not work well
 echo "configuring exceptions"
 
-# - auto un-topmost any bsp window
-UNTOPMOST_BSP_FIX='yabai -m query --windows --window $YABAI_WINDOW_ID | jq -e ".\"is-floating\" == false and .\"is-topmost\" == true" && yabai -m window $YABAI_WINDOW_ID --toggle topmost'
-yabai -m signal --add event=window_focused action="$UNTOPMOST_BSP_FIX"
+# - auto unzoom when switching windows (ref: https://github.com/koekeishiya/yabai/issues/1481#issuecomment-1287596830)
+yabai -m signal --add event=window_focused action='if [[ $(yabai -m query --windows --window | jq ".\"is-floating\"") == "false" ]]; then
+win_id=$(yabai -m query --windows --space | jq "map(select(.\"has-fullscreen-zoom\" and (.\"has-focus\" | not)))[0].id")
+if [[ $win_id != "null" ]]; then yabai -m window $win_id --toggle zoom-fullscreen; fi
+fi'
 
 # - float if window is not resizable
 CHECK_COND_FORCE='yabai -m query --windows --window $YABAI_WINDOW_ID | jq -er ".\"can-resize\" == false and .\"is-floating\" == false"'
@@ -75,73 +80,83 @@ yabai -m signal --add event=window_created action="$CHECK_COND_FORCE && $POS_FOR
 FOCUS_ON_DESTORY='sleep 0.5 && (yabai -m query --windows --window || (yabai -m query --spaces --space | jq ".\"first-window\"" | xargs -I {} yabai -m window --focus {} || true))'
 yabai -m signal --add event=window_destroyed action="$FOCUS_ON_DESTORY"
 
+# - focus some window of the app if the front app has switched
+yabai -m signal --add event=application_front_switched action='sleep 0.5 && (yabai -m query --windows --window || (yabai -m query --windows --window | jq ".app" | xargs -I {} yabai -m window --focus {} || true))' # TODO: fix
+
+# - remove shadow on float
+# (workaround with window_shadow float to include shadows for unmanaged windows like spotlight, but we don't want shadows for yabai-managed floating windows)
+REMOVE_FLOATING_SHADOW='if [[ $(yabai -m query --windows --window $YABAI_WINDOW_ID | jq ".\"is-floating\" and .\"has-shadow\"") == "true" ]]; then yabai -m window $YABAI_WINDOW_ID --toggle shadow; fi'
+yabai -m signal --add event=window_focused action="$REMOVE_FLOATING_SHADOW"
+yabai -m signal --add event=window_moved action="$REMOVE_FLOATING_SHADOW"
 
 # - other rules
-EXCLUDE_ROLES_REGEX="^(AXMenu|AXSheet|AXDialog|AXSystemDialog|AXFloatingWindow|AXSystemFloatingWindow)$"
-yabai -m rule --add role="$EXCLUDE_ROLES_REGEX" layer=above manage=off border=off
-yabai -m rule --add subrole="$EXCLUDE_ROLES_REGEX" layer=above manage=off border=off
-yabai -m rule --add title="^Preferences$" layer=above manage=off
-yabai -m rule --add app="^(System Settings|System Preferences)$" layer=above manage=off
-yabai -m rule --add title="^Problem Report for" layer=above manage=off
-yabai -m rule --add app="^iStat Menus" manage=off
+EXCLUDE_ROLES_REGEX="^(AXMenu|AXSheet|AXDialog|AXPopover|AXSystemDialog|AXFloatingWindow|AXSystemFloatingWindow)$"
+yabai -m rule --add role="$EXCLUDE_ROLES_REGEX" manage=off
+yabai -m rule --add subrole="$EXCLUDE_ROLES_REGEX" manage=off
+
+yabai -m rule --add app="^universalAccessAuthWarn$" layer=above manage=off
 yabai -m rule --add app="^Finder$" title="^(Move|Copy|Delete|Connecting to Server)$" layer=above manage=off
-#yabai -m rule --add app="^Finder$" title="^.*( Info)$" layer=above manage=off
-yabai -m rule --add app="^Digital Colou?r Meter$" layer=above sticky=on
-yabai -m rule --add app="^Macs Fan Control$" layer=above manage=off
-yabai -m rule --add app="^Digital Color Meter$" layer=above manage=off sticky=on
+yabai -m rule --add app="^Digital Colou?r Meter$" layer=above manage=off sticky=on
 yabai -m rule --add app="^(Archive Utility|DiskImageMounter|Installer)$" layer=above manage=off
-yabai -m rule --add app="^(Calculator|Calculator Plus)$" layer=above manage=off
-yabai -m rule --add app="^Stickies$" layer=above manage=off border=off sticky=on
+yabai -m rule --add app="^Macs Fan Control$" layer=above manage=off
+yabai -m rule --add app="^Stickies$" layer=above manage=off sticky=on
 yabai -m rule --add app="^Microsoft Teams$" title="^Microsoft Teams Notification$" layer=above manage=off
-yabai -m rule --add app="^Bartender 4$" manage=off
+yabai -m rule --add app="^Final Cut Pro$" title="^Background Tasks$" layer=above manage=off
+
+yabai -m rule --add title="^(Settings|Preferences)$" layer=normal manage=off
+yabai -m rule --add app="^(System Settings|System Preferences)$" layer=normal manage=off
+yabai -m rule --add title="^Problem Report for" layer=normal manage=off
+yabai -m rule --add app="^(Calculator|Calculator Plus)$" layer=normal manage=off
+yabai -m rule --add app="^IntelliJ IDEA$" title="^(Project Structure)$" layer=normal manage=off
+yabai -m rule --add app="^IntelliJ IDEA$" title="^(Rename|Move|Copy|Delete|Safe Delete|Change|Format|Reformat|Add).*$" layer=normal manage=off
+yabai -m rule --add app="^FaceTime$" layer=normal manage=off sticky=on
+
+yabai -m rule --add app="^Xcode$" title="^(Devices|Simulators)$" manage=off
+yabai -m rule --add app="^iStat Menus" manage=off
+yabai -m rule --add app="^Simulator$" manage=off
 yabai -m rule --add app="^Delete Apps$" manage=off
-yabai -m rule --add app="^Übersicht$" manage=off
-yabai -m rule --add app="^FaceTime$" layer=above manage=off sticky=on
+yabai -m rule --add app="bersicht$" layer=below manage=off
 yabai -m rule --add app="^TimeMachineEditor$" manage=off
-yabai -m rule --add app="^Mac Mouse Fix$" manage=off border=off
+yabai -m rule --add app="^Mac Mouse Fix$" manage=off
 yabai -m rule --add app="^NTFS for Mac$" manage=off
 yabai -m rule --add app="^(QuickTime Player|mpv|IINA)$" manage=off
 yabai -m rule --add app="^(Time Machine)$" manage=off
 
 # - for windows that aren't windows
-yabai -m rule --add app!="^(Xcode|Finder)$" title="^$" layer=above manage=off border=off
+yabai -m rule --add app!="^(Xcode|Finder)$" title="^$" layer=normal manage=off
 
 #layouts
 echo "configuring layouts and appearance"
 yabai -m config \
     external_bar all:0:28 \
-    window_gap 6 \
-    top_padding 4 \
-    bottom_padding 4 \
-    left_padding 4 \
-    right_padding 4 \
+    window_gap 10 \
+    top_padding 6 \
+    bottom_padding 6 \
+    left_padding 6 \
+    right_padding 6 \
     mouse_modifier ctrl \
     mouse_follows_focus off \
     focus_follows_mouse off \
     window_origin_display cursor \
-    window_topmost on \
     window_shadow float \
-    window_border off \
-    window_border_width 2 \
-    window_border_radius 11 \
-    window_border_blur off \
-    active_window_border_color 0xffff2277 \
-    normal_window_border_color 0xff553355 \
     insert_feedback_color      0xffff8800 \
     window_opacity               off \
     active_window_opacity        1.0 \
     normal_window_opacity        1.0 \
     window_zoom_persist off \
     split_type auto \
-    auto_balance off \
+    auto_balance on \
     layout bsp \
     window_animation_duration 0.0 \
     window_animation_frame_rate 60
 
+# invoke JankyBorders
+borders active_color=0xffaa66ff inactive_color=0xff553355 width=6.0 2>/dev/null 1>&2 &
 
 # done
 echo "yabai config is now loaded."
 terminal-notifier -title "yabai ready" -message "yabai is fully loaded." -ignoreDnD
-# refresh in case ubersicht was already loaded but not updated
+
+# refresh ubersicht again now that we are done
 sh -c "$REL_SPACES_IND"
 sh -c "$REL_BAR_IND"

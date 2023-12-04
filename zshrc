@@ -8,12 +8,24 @@ if [[ -o login ]]; then
     if [[ -n "$outdated_motd" ]]; then
         echo "$outdated_motd"
     fi
-    brew() {
-        /usr/local/bin/brew "$@"
-        if [[ "$1" == "upgrade" || "$1" == "outdated" ]]; then
-            ~/Scripts/updateBrewOutdated
-        fi
-    }
+
+    # check if brew exists
+    if [[ -x "$(command -v brew)" ]]; then
+
+        # if so, intercept updates
+        brew() {
+            /usr/local/bin/brew "$@"
+            if [[ "$1" == "upgrade" || "$1" == "outdated" ]]; then
+                ~/Scripts/updateBrewOutdated
+            fi
+
+        }
+    else
+
+        # otherwise, remove the txt
+        rm ~/tmp/brew_outdated_motd.txt
+
+    fi
 fi
 
 source ~/bin/pwdt
@@ -99,6 +111,10 @@ export LC_ALL=en_US.UTF-8
 
 export MANPATH="/usr/local/man:$MANPATH"
 
+# iTerm2 Shell Integration
+export ITERM2_SQUELCH_MARK=1
+test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+
 # Homebrew and misc
 export PATH=$HOME/bin:/usr/local/bin:/opt/homebrew/bin:$PATH
 
@@ -136,7 +152,7 @@ export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#606060"
 export ZSH_AUTOSUGGEST_STRATEGY=(match_prev_cmd completion)
 export ZSH_AUTOSUGGEST_USE_ASYNC=1
 export ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
-export ZSH_AUTOSUGGEST_HISTORY_IGNORE="(?(#c50,)|(cd|rm|rmdir|sudo|git commit -m|vim|nvim) *)"
+export ZSH_AUTOSUGGEST_HISTORY_IGNORE="(?(#c50,)|(cd|rm|rmdir|sudo|git commit|vim|nvim) *)"
 export ZSH_AUTOSUGGEST_COMPLETION_IGNORE="(rm|rmdir|sudo) *"
 
 # Preferred editor for local and remote sessions
@@ -148,6 +164,9 @@ fi
 
 # fzf
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+# bun completions
+[ -s "/usr/local/Cellar/bun/1.0.11/share/zsh/site-functions/_bun" ] && source "/usr/local/Cellar/bun/1.0.11/share/zsh/site-functions/_bun"
 
 # homebrew config
 export HOMEBREW_NO_AUTO_UPDATE=1
@@ -170,6 +189,7 @@ export TERM="xterm-256color"
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
 # For a full list of active aliases, run `alias`.
 
+# === My aliases and helper functions ===
 alias vim="echo 'note: using nvim'; nvim" # use nvim instead of vim, old habits die hard
 alias ctfvm="limactl shell ctfvm"
 alias tetris="autoload -Uz tetriscurses && tetriscurses"
@@ -181,8 +201,10 @@ docker() {
   lima nerdctl "$@"
 }
 
-proctorScreenRec() {
-    ffmpeg -f avfoundation -r 1 -probesize 20M -threads 1 -i "$(ffmpeg -f avfoundation -list_devices true -i "" 2>&1 | grep "Capture screen" | cut -d ' ' -f 5 | cut -c 2):" -vcodec libx264 -b:v 128k -s hd1080 ~/Desktop/proctor_screenrec_$(date +"%Y%m%d_%H%M%S").mp4
+docker-compose() {
+  echo "running docker-compose command as nerdctl compose via lima-vm"
+  echo " ~> lima nerdctl compose $@"
+  lima nerdctl compose "$@"
 }
 
 ctf() {
@@ -193,17 +215,138 @@ ctf() {
     cd ~/CTF
 }
 
+ana() {
+    echo "Note: Using Anaconda Environment" && \
+        echo "Anaconda's installation of python and other libraries are added to PATH in this session"
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/usr/local/anaconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/usr/local/anaconda3/etc/profile.d/conda.sh" ]; then
+        . "/usr/local/anaconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/usr/local/anaconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+}
+
 gnuify() {
     echo "Including GNU utils in PATH (replaces macOS utils if present)"
     echo "*** Warning: Stuff dependent on system utils might break! ***"
 
     export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
-    export PATH="/usr/local/opt/cross/arm-linux:$PATH"
+}
+
+videospeed() {
+    if [ -z $1 ] || [ -z $2 ] || [ -z $3 ]; then
+        echo "Usage"
+        echo "  $ $0 inFile speedupNumber outFile"
+        echo "Example"
+        echo "  $ $0 demo.mp4 2 demo2x.mp4"
+        return 0;
+    fi
+
+    case $2 in
+        ''|*[!0-9]*) echo "Error: Speed '$2' is not a number"; return 1 ;;
+        *) ;;
+    esac
+
+    echo "[$1] --- $2""x speed --> [$3]"
+    echo
+    sleep 1
+    ffmpeg -i "$1" -vf "setpts=PTS/$2" -filter:a "atempo=$2" "$3"
 }
 
 xcSimStatusOverride() {
     xcrun simctl status_bar booted override --time "9:41 AM" --batteryState charged --batteryLevel 100 --wifiMode active --wifiBars 3 --cellularMode active --cellularBars 4 --operatorName ""
 }
 
+ggcc() {
+    # gnu gcc
+    "$(compgen -c | grep -Eo "^gcc-[0-9]+$")" "$@"
+}
+
+javaver() {
+    case $1 in
+        ''|*[!0-9]*)
+            echo "Sets Java version."
+            echo "Usage"
+            echo "  $ javaver 11"
+            echo
+            echo "Current:"
+            echo
+            java -version
+            return 0;;
+    esac
+
+    PATH="$(dirname /usr/local/Cellar/openjdk@"$1"/"$1"*/bin/java):$PATH"
+
+    if [[ "$?" == "0" ]]; then
+        echo "Set to Java $1!"
+    else
+        echo "Could not set: Java $1"
+    fi
+
+    echo
+
+    java -version
+}
+
+
+# === Uni Work ===
+s() {
+    if [[ -z "$1" ]]; then
+        echo "Usage: s <modcode>"
+        echo "Example: s 3230"
+    else
+        cd ~/Projects/*"$1"*
+    fi
+}
+
+stuscp() {
+    if [[ "$1" == "d" ]]; then
+        if [[ -z "$2" || -z "$3" ]]; then
+            echo "Usage: stuscp d <modcode> <dirname> [username@domain] [port]"
+        else
+            mkdir -p ~/Projects/"$2"/
+            echo "Clearing ~/Projects/$2/$3/"
+            echo
+            rm -r ~/Projects/"$2"/"$3"/
+
+            echo "Downloading from server..."
+            scp -P "${5:-22}" -r "${4:-stu.comp.nus.edu.sg}":~/"$2"/"$3" ~/Projects/"$2"/ &&
+                cd ~/Projects/"$2"/"$3" &&
+                echo &&
+                echo "Now at ~/Projects/$2/$3/"
+        fi
+    elif [[ "$1" == "u" ]]; then
+        if [[ -z "$2" || -z "$3" ]]; then
+            echo "Usage: stuscp u <modcode> <dirname> [username@domain] [port]"
+        else
+            tmp_pwd="$(pwd)"
+
+            echo "Now at ~/Projects/$2/" &&
+                cd ~/Projects/"$2"/ &&
+                scp -P "${5:-22}" -r "./$3" "${4:-stu.comp.nus.edu.sg}":~/"$2"/
+
+            cd "$tmp_pwd"
+        fi
+    else
+        echo "Usage: stuscp (u|d) <modcode> <dirname> [username@domain] [port]"
+    fi
+}
+
+proctorScreenRec() {
+    ffmpeg -f avfoundation -r 1 -probesize 20M -threads 1 -i "$(ffmpeg -f avfoundation -list_devices true -i "" 2>&1 | grep "Capture screen" | cut -d ' ' -f 5 | cut -c 2):" -vcodec libx264 -b:v 128k -s hd1080 ~/Desktop/proctor_screenrec_$(date +"%Y%m%d_%H%M%S").mp4
+}
+
 # sourced configs
 source ~/bin/hoard
+
+
+

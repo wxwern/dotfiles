@@ -55,28 +55,24 @@ let g:polyglot_disabled = ['sensible']
 " Svelte syntax highlighting
 Plug 'evanleck/vim-svelte', {'branch': 'main'}
 
-" Setup ALE
-Plug 'dense-analysis/ale'
-let g:ale_c_gcc_executable = 'gcc-12'
-let g:ale_cpp_gcc_executable = 'gcc-12'
-let g:ale_echo_msg_error_str = 'ERR'
-let g:ale_echo_msg_warning_str = 'WARN'
-let g:ale_python_pylint_options = '--rcfile=~/.pylintrc'
-let g:ale_echo_msg_format = '[%severity%] %linter%: %s'
-let g:airline#extensions#ale#enabled = 1
-
-" jump to prev/next error (gj gk)
-nmap <silent> gk <Plug>(ale_previous_wrap)
-nmap <silent> gj <Plug>(ale_next_wrap)
 
 " coc
 Plug 'neoclide/coc.nvim', {'branch': 'release' }
 
 " GoTo code navigation.
+nmap <silent> <Leader>dec  <Plug>(coc-declaration)
+nmap <silent> <Leader>def  <Plug>(coc-definition)
+nmap <silent> <Leader>tdef <Plug>(coc-type-definition)
+nmap <silent> <Leader>impl <Plug>(coc-implementation)
+nmap <silent> <Leader>ref  <Plug>(coc-references)
+nmap <silent> <Leader>ep   <Plug>(coc-diagnostic-prev)
+nmap <silent> <Leader>en   <Plug>(coc-diagnostic-next)
 nmap <silent> gd <Plug>(coc-definition)
 nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
+nmap <silent> gk <Plug>(coc-diagnostic-prev)
+nmap <silent> gj <Plug>(coc-diagnostic-next)
 
 " Autocomplete on enter
 inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm() : "\<C-g>u\<CR>"
@@ -85,11 +81,14 @@ inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm() : "\<C-g>u\<CR
 autocmd CursorHold * silent call CocActionAsync('highlight')
 
 " Symbol renaming.
-nmap <leader>rn <Plug>(coc-rename)
+nmap <Leader>rn <Plug>(coc-rename)
+nmap <Leader>rf <Plug>(coc-refactor)
 
 " Github Copilot
 if has('nvim')
   Plug 'github/copilot.vim'
+  let g:copilot_node_command = "~/bin/node16"
+  let g:copilot_filetypes = { 'markdown': v:true }
   " cycle copilot suggestions
   "inoremap <C-[> <Plug>(copilot-previous)
   "inoremap <C-]> <Plug>(copilot-next)
@@ -168,18 +167,25 @@ endif
 call plug#end()
 
 " because syntax highlighting randomly breaks
+noremap <Leader>syn <Esc>:syntax sync fromstart<CR>
 noremap <C-q>  <Esc>:syntax sync fromstart<CR>
 inoremap <C-q> <Esc><Esc>:syntax sync fromstart<CR>
 
 " mappings
 " lazy reference of https://vim.fandom.com/wiki/Easier_buffer_switching
 " \l       : list buffers
-" \b \f \g : go back/forward/last-used
+" \b \f \g : go back/forward/last-used buffer
+" \tb \tf  : go back/forward tab
+" \q \tq   : close buffer/tab
 " \1 \2 \3 : go to buffer 1/2/3 etc
 nnoremap <Leader>l :ls<CR>
 nnoremap <Leader>b :bp<CR>
 nnoremap <Leader>f :bn<CR>
 nnoremap <Leader>g :e#<CR>
+nnoremap <Leader>q :bd<CR>
+nnoremap <Leader>tb :tabprevious<CR>
+nnoremap <Leader>tn :tabnext<CR>
+nnoremap <Leader>tq :tabclose<CR>
 nnoremap <Leader>1 :1b<CR>
 nnoremap <Leader>2 :2b<CR>
 nnoremap <Leader>3 :3b<CR>
