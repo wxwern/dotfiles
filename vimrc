@@ -85,14 +85,11 @@ nmap <Leader>rn <Plug>(coc-rename)
 nmap <Leader>rf <Plug>(coc-refactor)
 
 " Github Copilot
-if has('nvim')
-  Plug 'github/copilot.vim'
-  let g:copilot_node_command = "~/bin/node16"
-  let g:copilot_filetypes = { 'markdown': v:true }
-  " cycle copilot suggestions
-  "inoremap <C-[> <Plug>(copilot-previous)
-  "inoremap <C-]> <Plug>(copilot-next)
-endif
+Plug 'github/copilot.vim'
+let g:copilot_filetypes = { 'markdown': v:true }
+" cycle copilot suggestions
+"inoremap <C-[> <Plug>(copilot-previous)
+"inoremap <C-]> <Plug>(copilot-next)
 
 " Return to previous location on reopen.
 Plug 'farmergreg/vim-lastplace'
@@ -148,6 +145,7 @@ map <C-p> :FZF<CR>
 let g:fzf_action = {
       \ 'ctrl-x': 'split',
       \ 'ctrl-v': 'vsplit' }
+let $FZF_DEFAULT_COMMAND='find . \( -name node_modules -o -name .git \) -prune -o -print'
 
 " Avoid fzf opening in NERDTree window
 nnoremap <silent> <expr> <C-p> (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":FZF\<cr>"

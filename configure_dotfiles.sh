@@ -42,6 +42,7 @@ importCustom() {
 echo
 echo
 import "*rc" $1
+if [ ! -d ~/.config/nvim/ ]; then mkdir -p ~/.config/nvim/; fi
 importCustom "vimrc" ".config/nvim/init.vim" $1
 import "*profile" $1
 import "p10k.zsh" $1
@@ -72,7 +73,7 @@ if [ ! -d ~/.oh-my-zsh ]; then
 fi
 
 # install powerlevel10k?
-if [ -d ~/.oh-my-zsh && ! -d ~/.oh-my-zsh/custom/themes/powerlevel10k ]; then
+if [[ -d ~/.oh-my-zsh && ! -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k ]]; then
     read -p "Install powerlevel10k? (y/N) " -n 1 -r
     if [[ $REPLY =~ ^[Yy]$ ]]
     then
@@ -81,8 +82,29 @@ if [ -d ~/.oh-my-zsh && ! -d ~/.oh-my-zsh/custom/themes/powerlevel10k ]; then
     fi
 fi
 
+# install zsh-autosuggestions?
+if [[ -d ~/.oh-my-zsh && ! -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions ]]; then
+    read -p "Install zsh-autosuggestions? (y/N) " -n 1 -r
+    if [[ $REPLY =~ ^[Yy]$ ]]
+    then
+        echo "Installing zsh-autosuggestions"
+        git clone --depth 1 -- https://github.com/zsh-users/zsh-autosuggestions.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+    fi
+fi
+
+# install zsh-syntax-highlighting?
+if [[ -d ~/.oh-my-zsh && ! -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting ]]; then
+    read -p "Install zsh-syntax-highlighting? (y/N) " -n 1 -r
+    if [[ $REPLY =~ ^[Yy]$ ]]
+    then
+        echo "Installing zsh-syntax-highlighting"
+        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+    fi
+fi
+
 # install vim-plug?
-if [ ! -f ~/.vim/autoload/plug.vim ]; then
+if [[ ! -f ~/.vim/autoload/plug.vim || ! -f ~/.local/share/nvim/site/autoload/plug.vim ]]; then
+
     read -p "Install vim-plug? (y/N) " -n 1 -r
     if [[ $REPLY =~ ^[Yy]$ ]]
     then

@@ -84,17 +84,20 @@ yabai -m signal --add event=window_destroyed action="$FOCUS_ON_DESTORY"
 yabai -m signal --add event=application_front_switched action='sleep 0.5 && (yabai -m query --windows --window || (yabai -m query --windows --window | jq ".app" | xargs -I {} yabai -m window --focus {} || true))' # TODO: fix
 
 # - remove shadow on float
-# (workaround with window_shadow float to include shadows for unmanaged windows like spotlight, but we don't want shadows for yabai-managed floating windows)
-REMOVE_FLOATING_SHADOW='if [[ $(yabai -m query --windows --window $YABAI_WINDOW_ID | jq ".\"is-floating\" and .\"has-shadow\"") == "true" ]]; then yabai -m window $YABAI_WINDOW_ID --toggle shadow; fi'
-yabai -m signal --add event=window_focused action="$REMOVE_FLOATING_SHADOW"
-yabai -m signal --add event=window_moved action="$REMOVE_FLOATING_SHADOW"
+#   workaround with 'window_shadow float' to include shadows for unmanaged windows like spotlight, 
+#   but we don't want shadows for yabai-managed floating windows
+#
+# REMOVE_FLOATING_SHADOW='if [[ $(yabai -m query --windows --window $YABAI_WINDOW_ID | jq ".\"is-floating\" and .\"has-shadow\"") == "true" ]]; then yabai -m window $YABAI_WINDOW_ID --toggle shadow; fi'
+# REMOVE_FLOATING_SHADOW_EXCEPTIONS="^(coreautha)$"
+# yabai -m signal --add event=window_focused action="$REMOVE_FLOATING_SHADOW" app!="$REMOVE_FLOATING_SHADOW_EXCEPTIONS"
+# yabai -m signal --add event=window_moved action="$REMOVE_FLOATING_SHADOW" app!="$REMOVE_FLOATING_SHADOW_EXCEPTIONS"
 
 # - other rules
 EXCLUDE_ROLES_REGEX="^(AXMenu|AXSheet|AXDialog|AXPopover|AXSystemDialog|AXFloatingWindow|AXSystemFloatingWindow)$"
 yabai -m rule --add role="$EXCLUDE_ROLES_REGEX" manage=off
 yabai -m rule --add subrole="$EXCLUDE_ROLES_REGEX" manage=off
 
-yabai -m rule --add app="^universalAccessAuthWarn$" layer=above manage=off
+yabai -m rule --add app="(^coreauth.*|^universalAccessAuthWarn$)" layer=above manage=off
 yabai -m rule --add app="^Finder$" title="^(Move|Copy|Delete|Connecting to Server)$" layer=above manage=off
 yabai -m rule --add app="^Digital Colou?r Meter$" layer=above manage=off sticky=on
 yabai -m rule --add app="^(Archive Utility|DiskImageMounter|Installer)$" layer=above manage=off
@@ -129,17 +132,17 @@ yabai -m rule --add app!="^(Xcode|Finder)$" title="^$" layer=normal manage=off
 echo "configuring layouts and appearance"
 yabai -m config \
     external_bar all:0:28 \
-    window_gap 10 \
-    top_padding 6 \
-    bottom_padding 6 \
-    left_padding 6 \
-    right_padding 6 \
+    window_gap 8 \
+    top_padding 4 \
+    bottom_padding 4 \
+    left_padding 4 \
+    right_padding 4 \
     mouse_modifier ctrl \
     mouse_follows_focus off \
     focus_follows_mouse off \
     window_origin_display cursor \
     window_shadow float \
-    insert_feedback_color      0xffff8800 \
+    insert_feedback_color      0xffca66ff \
     window_opacity               off \
     active_window_opacity        1.0 \
     normal_window_opacity        1.0 \
@@ -151,7 +154,14 @@ yabai -m config \
     window_animation_frame_rate 60
 
 # invoke JankyBorders
-borders active_color=0xffaa66ff inactive_color=0xff553355 width=6.0 2>/dev/null 1>&2 &
+borders \
+    active_color=0xffca66ff \
+    inactive_color=0xff553355 \
+    width=3.0 \
+    order=above \
+    hidpi=on \
+    blacklist=Stickies,"Calculator Plus",universalAccessAuthWarn,coreautha,coreauthd,coreauthagent,coreauthui \
+    2>/dev/null 1>&2 &
 
 # done
 echo "yabai config is now loaded."

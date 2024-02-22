@@ -118,6 +118,9 @@ test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell
 # Homebrew and misc
 export PATH=$HOME/bin:/usr/local/bin:/opt/homebrew/bin:$PATH
 
+# bun
+export PATH=$HOME/.bun/bin:$PATH
+
 # Rust cargo
 . "$HOME/.cargo/env"
 
@@ -164,6 +167,7 @@ fi
 
 # fzf
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+export FZF_DEFAULT_COMMAND='find . \( -name node_modules -o -name .git \) -prune -o -print'
 
 # bun completions
 [ -s "/usr/local/Cellar/bun/1.0.11/share/zsh/site-functions/_bun" ] && source "/usr/local/Cellar/bun/1.0.11/share/zsh/site-functions/_bun"
@@ -191,9 +195,66 @@ export TERM="xterm-256color"
 
 # === My aliases and helper functions ===
 alias vim="echo 'note: using nvim'; nvim" # use nvim instead of vim, old habits die hard
+alias cp="cp -c" # use macOS APFS cloning by default
 alias ctfvm="limactl shell ctfvm"
 alias tetris="autoload -Uz tetriscurses && tetriscurses"
 alias obsbrowsercam="/Applications/OBS.app/Contents/MacOS/obs --enable-gpu --use-fake-ui-for-media-stream >> /dev/null 2>&1"
+
+yarn-sync() {
+    # sync package.json to match yarn.lock
+    # (https://gist.github.com/bartvanandel/0418571bad30a3199afdaa1d5e3dbe25)
+
+    if [ ! -f yarn.lock ]; then
+        echo "Error: yarn.lock not found"
+        return 1
+    fi
+
+    bun ~/Scripts/yarn-sync.js
+}
+
+rmtimecode() {
+    echo "Generating new no timecode files from .mov files in this directory..."
+    echo "Processing into temporary files..."
+
+    if [[ -z "$(command -v ffmpeg)" ]]; then
+        echo "Error: ffmpeg not found"
+        return 1
+    fi
+
+    for file in *.mov; do
+        # skip is there's already a _noTC file
+        if [[ -f "${file%.*}_noTC.${file##*.}" ]]; then
+            continue
+        fi
+        # skip if the file itself is a _noTC file
+        if [[ "$file" == *_noTC.mov ]]; then
+            continue
+        fi
+        # convert
+        ffmpeg -i "$file" -write_tmcd 0 -c copy "${file%.*}_noTC.${file##*.}";
+    done
+
+    echo "Results generated!"
+    echo
+    echo "Are you sure you want to remove timecode from all original .mov files in this directory?"
+    echo "This is irreversible!"
+
+    read REPLY"? Continue? [y/N] "
+    echo
+    if [[ ! $REPLY =~ ^[Yy] ]]; then
+        echo "Aborting..."
+        return 1
+    fi
+
+    echo "Proceeding..."
+
+    for file in *_noTC.mov; do
+        original="${file%_noTC.mov}.mov";
+        mv "$file" "$original" && echo "Removed timecode from $original" || echo "Error processing $original";
+    done
+
+    echo "Done!"
+}
 
 docker() {
   echo "running docker command as nerdctl via lima-vm"
