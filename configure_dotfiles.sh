@@ -44,6 +44,8 @@ echo
 import "*rc" $1
 if [ ! -d ~/.config/nvim/ ]; then mkdir -p ~/.config/nvim/; fi
 importCustom "vimrc" ".config/nvim/init.vim" $1
+if [ ! -d ~/.config/borders/ ]; then mkdir -p ~/.config/borders/; fi
+importCustom "bordersrc" ".config/borders/bordersrc" $1
 import "*profile" $1
 import "p10k.zsh" $1
 

@@ -1,31 +1,79 @@
 # custom prompts if login session
 if [[ -o login ]]; then
 
-    printf '\n\033[0;1;196mWelcome, Wern.\033[0m\n'
+    printf '\n'
+    if [[ "$(uname -s)" != "Darwin" ]]; then
+        printf '\033[0;31m'
+        printf 'This is not a macOS system - this zshrc may not work as expected.\n'
+        printf '\033[0m'
+    fi
+
+    printf '\033[1m'
+    printf "Welcome, $(id -F).\n\n"
+    printf '\033[0m'
 
     # brew upgrade reminders
-    outdated_motd="$(cat ~/tmp/brew_outdated_motd.txt)"
-    if [[ -n "$outdated_motd" ]]; then
-        echo "$outdated_motd"
+    if [[ -f ~/tmp/brew_outdated_motd.txt ]]; then
+        _outdated_motd="$(cat ~/tmp/brew_outdated_motd.txt)"
+        if [[ -n "$_outdated_motd" ]]; then
+            echo "$_outdated_motd"
+        fi
     fi
 
     # check if brew exists
     if [[ -x "$(command -v brew)" ]]; then
 
-        # if so, intercept updates
-        brew() {
-            /usr/local/bin/brew "$@"
-            if [[ "$1" == "upgrade" || "$1" == "outdated" ]]; then
-                ~/Scripts/updateBrewOutdated
+        # get the standard brew path
+        _BREW_COMMAND_PATH="$(command -v brew)"
+
+        # motd updater
+        brew-updatemotd() {
+            _new_motd=""
+            _brew_outdated_count="$("$_BREW_COMMAND_PATH" outdated | wc -l | xargs)"
+            if (( $_brew_outdated_count != 0 )); then
+                _new_motd="You have $_brew_outdated_count outdated packages. Please upgrade them."
             fi
 
+            if [[ ! -f ~/tmp/brew_outdated_motd.txt ]]; then
+                mkdir -p ~/tmp
+                touch ~/tmp/brew_outdated_motd.txt
+            fi
+
+            if [[ "$(cat ~/tmp/brew_outdated_motd.txt)" != "$_new_motd" ]]; then
+                printf "$_new_motd\n" > ~/tmp/brew_outdated_motd.txt
+            fi
         }
+
+        # brew wrapper
+        brew() {
+            # locate the brew binary and run it
+            "$_BREW_COMMAND_PATH" "$@"
+
+            # for updates and upgrades, we intercept the output to update the motd
+            if [[ "$1" == "upgrade" || "$1" == "outdated" ]]; then
+                brew-updatemotd
+            fi
+        }
+
     else
-
-        # otherwise, remove the txt
-        rm ~/tmp/brew_outdated_motd.txt
-
+        # otherwise, remove the txt if it exists
+        [[ -f ~/tmp/brew_outdated_motd.txt ]] &&
+            rm ~/tmp/brew_outdated_motd.txt
     fi
+
+    # add alias to arm brew if it exists
+    if [[ -x /opt/homebrew/bin/brew ]]; then
+        alias brew-arm64="arch -arm64 /opt/homebrew/bin/brew"
+        alias brew-arm="arch -arm64 /opt/homebrew/bin/brew"
+    fi
+
+    # add alias to x86 brew if it exists
+    if [[ -x /usr/local/bin/brew ]]; then
+        alias brew-x86_64="arch -x86_64 /usr/local/bin/brew"
+        alias brew-rosetta="arch -x86_64 /usr/local/bin/brew"
+    fi
+
+    printf '\n'
 fi
 
 source ~/bin/pwdt
@@ -34,7 +82,7 @@ source ~/bin/pwdt
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+    source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
 
@@ -93,7 +141,7 @@ HIST_STAMPS="yyyy-mm-dd"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git python macos zsh-autosuggestions zsh-syntax-highlighting)
+plugins=(git python macos zsh-autosuggestions zsh-syntax-highlighting copyfile)
 
 # Source oh my zsh
 [[ ! -f $ZSH/oh-my-zsh.sh ]] || source $ZSH/oh-my-zsh.sh
@@ -109,14 +157,9 @@ setopt histignorespace
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 
-export MANPATH="/usr/local/man:$MANPATH"
-
 # iTerm2 Shell Integration
 export ITERM2_SQUELCH_MARK=1
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
-
-# Homebrew and misc
-export PATH=$HOME/bin:/usr/local/bin:/opt/homebrew/bin:$PATH
 
 # bun
 export PATH=$HOME/.bun/bin:$PATH
@@ -126,19 +169,6 @@ export PATH=$HOME/.bun/bin:$PATH
 
 # Golang
 export PATH="$HOME/go/bin:$PATH"
-
-# Ruby
-#export PATH="/usr/local/opt/ruby/bin:$PATH"
-#export LDFLAGS="-L/usr/local/opt/ruby/lib"
-#export CPPFLAGS="-I/usr/local/opt/ruby/include"
-#export PKG_CONFIG_PATH="/usr/local/opt/ruby/lib/pkgconfig"
-
-# include linux utils
-export PATH="/usr/local/opt/util-linux/bin:$PATH"
-export PATH="/usr/local/opt/util-linux/sbin:$PATH"
-export LDFLAGS="-L/usr/local/opt/util-linux/lib"
-export CPPFLAGS="-I/usr/local/opt/util-linux/include"
-export PKG_CONFIG_PATH="/usr/local/opt/util-linux/lib/pkgconfig"
 
 # Android
 export ANDROID_HOME=/Users/$USER/Library/Android/sdk
@@ -197,6 +227,7 @@ export TERM="xterm-256color"
 alias vim="echo 'note: using nvim'; nvim" # use nvim instead of vim, old habits die hard
 alias cp="cp -c" # use macOS APFS cloning by default
 alias ctfvm="limactl shell ctfvm"
+alias ctfvmrosetta="limactl shell ctfvm-rosetta"
 alias tetris="autoload -Uz tetriscurses && tetriscurses"
 alias obsbrowsercam="/Applications/OBS.app/Contents/MacOS/obs --enable-gpu --use-fake-ui-for-media-stream >> /dev/null 2>&1"
 
@@ -257,13 +288,13 @@ rmtimecode() {
 }
 
 docker() {
-  echo "running docker command as nerdctl via lima-vm"
+  echo "running docker command as \`nerdctl\` via lima-vm"
   echo " ~> lima nerdctl $@"
   lima nerdctl "$@"
 }
 
 docker-compose() {
-  echo "running docker-compose command as nerdctl compose via lima-vm"
+  echo "running docker-compose command as \`nerdctl compose\` via lima-vm"
   echo " ~> lima nerdctl compose $@"
   lima nerdctl compose "$@"
 }
@@ -282,14 +313,14 @@ ana() {
 
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/usr/local/anaconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+__conda_setup="$('/opt/homebrew/anaconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
 if [ $? -eq 0 ]; then
     eval "$__conda_setup"
 else
-    if [ -f "/usr/local/anaconda3/etc/profile.d/conda.sh" ]; then
-        . "/usr/local/anaconda3/etc/profile.d/conda.sh"
+    if [ -f "/opt/homebrew/anaconda3/etc/profile.d/conda.sh" ]; then
+        . "/opt/homebrew/anaconda3/etc/profile.d/conda.sh"
     else
-        export PATH="/usr/local/anaconda3/bin:$PATH"
+        export PATH="/opt/homebrew/anaconda3/bin:$PATH"
     fi
 fi
 unset __conda_setup
@@ -300,7 +331,12 @@ gnuify() {
     echo "Including GNU utils in PATH (replaces macOS utils if present)"
     echo "*** Warning: Stuff dependent on system utils might break! ***"
 
-    export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
+    if [[ -z "$HOMEBREW_PREFIX" ]]; then
+        echo "Error: Homebrew prefix not found"
+        return 1
+    fi
+
+    export PATH="$HOMEBREW_PREFIX/opt/coreutils/libexec/gnubin:$PATH"
 }
 
 videospeed() {
@@ -345,7 +381,15 @@ javaver() {
             return 0;;
     esac
 
-    PATH="$(dirname /usr/local/Cellar/openjdk@"$1"/"$1"*/bin/java):$PATH"
+    echo "Locating Java $1..."
+    echo "  >>> Accessing... $HOMEBREW_PREFIX/Cellar/openjdk@$1/$1*/bin/java"
+
+    if [[ ! -d "$HOMEBREW_PREFIX/Cellar/openjdk@$1" ]]; then
+        echo "Error: Java $1 not found"
+        return 1
+    fi
+
+    PATH="$(dirname $HOMEBREW_PREFIX/Cellar/openjdk@"$1"/"$1"*/bin/java):$PATH"
 
     if [[ "$?" == "0" ]]; then
         echo "Set to Java $1!"

@@ -92,33 +92,40 @@ yabai -m signal --add event=application_front_switched action='sleep 0.5 && (yab
 # yabai -m signal --add event=window_focused action="$REMOVE_FLOATING_SHADOW" app!="$REMOVE_FLOATING_SHADOW_EXCEPTIONS"
 # yabai -m signal --add event=window_moved action="$REMOVE_FLOATING_SHADOW" app!="$REMOVE_FLOATING_SHADOW_EXCEPTIONS"
 
+# - if role is AXSheet, then disable borders temporarily
+#yabai -m signal --add event=window_focused action='if [[ $(yabai -m query --windows --window | jq ".role") == "\"AXSheet\"" ]]; then borders active_color=0x00000000; fi';
+#yabai -m signal --add event=window_focused action='if [[ $(yabai -m query --windows --window | jq ".role") != "\"AXSheet\"" ]]; then ~/.config/borders/bordersrc 2>/dev/null 1>&2; fi';
+
 # - other rules
-EXCLUDE_ROLES_REGEX="^(AXMenu|AXSheet|AXDialog|AXPopover|AXSystemDialog|AXFloatingWindow|AXSystemFloatingWindow)$"
-yabai -m rule --add role="$EXCLUDE_ROLES_REGEX" manage=off
-yabai -m rule --add subrole="$EXCLUDE_ROLES_REGEX" manage=off
+EXCLUDE_ROLES_REGEX="(AXMenu|AXSheet|AXDialog|AXPopover|AXSystemDialog|AXFloatingWindow|AXSystemFloatingWindow)"
+yabai -m rule --add role="^$EXCLUDE_ROLES_REGEX$" manage=off
+yabai -m rule --add subrole="^$EXCLUDE_ROLES_REGEX$" manage=off
 
-yabai -m rule --add app="(^coreauth.*|^universalAccessAuthWarn$)" layer=above manage=off
-yabai -m rule --add app="^Finder$" title="^(Move|Copy|Delete|Connecting to Server)$" layer=above manage=off
-yabai -m rule --add app="^Digital Colou?r Meter$" layer=above manage=off sticky=on
-yabai -m rule --add app="^(Archive Utility|DiskImageMounter|Installer)$" layer=above manage=off
-yabai -m rule --add app="^Macs Fan Control$" layer=above manage=off
-yabai -m rule --add app="^Stickies$" layer=above manage=off sticky=on
-yabai -m rule --add app="^Microsoft Teams$" title="^Microsoft Teams Notification$" layer=above manage=off
-yabai -m rule --add app="^Final Cut Pro$" title="^Background Tasks$" layer=above manage=off
+yabai -m rule --add app="(^coreauth.*|^universalAccessAuthWarn$)" sub-layer=above manage=off
+yabai -m rule --add app="^Finder$" title="^(Move|Copy|Delete|Connecting to Server)$" sub-layer=above manage=off
+yabai -m rule --add app="^Digital Colou?r Meter$" sub-layer=above manage=off sticky=on
+yabai -m rule --add app="^(Archive Utility|DiskImageMounter|Installer)$" sub-layer=above manage=off
+yabai -m rule --add app="^Macs Fan Control$" sub-layer=above manage=off
+yabai -m rule --add app="^Stickies$" sub-layer=above manage=off sticky=on
+yabai -m rule --add app="^Microsoft Teams$" title="^Microsoft Teams Notification$" sub-layer=above manage=off
+yabai -m rule --add app="^Final Cut Pro$" title="^Background Tasks$" sub-layer=above manage=off
 
-yabai -m rule --add title="^(Settings|Preferences)$" layer=normal manage=off
-yabai -m rule --add app="^(System Settings|System Preferences)$" layer=normal manage=off
-yabai -m rule --add title="^Problem Report for" layer=normal manage=off
-yabai -m rule --add app="^(Calculator|Calculator Plus)$" layer=normal manage=off
-yabai -m rule --add app="^IntelliJ IDEA$" title="^(Project Structure)$" layer=normal manage=off
-yabai -m rule --add app="^IntelliJ IDEA$" title="^(Rename|Move|Copy|Delete|Safe Delete|Change|Format|Reformat|Add).*$" layer=normal manage=off
-yabai -m rule --add app="^FaceTime$" layer=normal manage=off sticky=on
+yabai -m rule --add title="^(Settings|Preferences)$" sub-layer=normal manage=off
+yabai -m rule --add app="^(System Settings|System Preferences)$" sub-layer=normal manage=off
+yabai -m rule --add title="^Problem Report for" sub-layer=normal manage=off
+yabai -m rule --add app="^(Calculator|Calculator Plus)$" sub-layer=normal manage=off
+yabai -m rule --add app="^Safari$" title="^(General|Privacy|Security|Search|Extensions|Websites|Advanced|Develop|Accounts|AutoFill|Notifications|Password|Tabs|Media)$" sub-layer=normal manage=off
+# yabai -m rule --add app="^Parallels Desktop" title="(Settings|Preferences|Configuration|Control Cent(re|er))$" sub-layer=normal manage=off
+yabai -m rule --add app="^Parallels Desktop" sub-layer=normal manage=off
+yabai -m rule --add app="^IntelliJ IDEA$" title="^(Project Structure)$" sub-layer=normal manage=off
+yabai -m rule --add app="^IntelliJ IDEA$" title="^(Rename|Move|Copy|Delete|Safe Delete|Change|Format|Reformat|Add).*$" sub-layer=normal manage=off
+yabai -m rule --add app="^FaceTime$" sub-layer=normal manage=off sticky=on
 
 yabai -m rule --add app="^Xcode$" title="^(Devices|Simulators)$" manage=off
 yabai -m rule --add app="^iStat Menus" manage=off
 yabai -m rule --add app="^Simulator$" manage=off
 yabai -m rule --add app="^Delete Apps$" manage=off
-yabai -m rule --add app="bersicht$" layer=below manage=off
+yabai -m rule --add app="bersicht$" sub-layer=below manage=off
 yabai -m rule --add app="^TimeMachineEditor$" manage=off
 yabai -m rule --add app="^Mac Mouse Fix$" manage=off
 yabai -m rule --add app="^NTFS for Mac$" manage=off
@@ -126,7 +133,13 @@ yabai -m rule --add app="^(QuickTime Player|mpv|IINA)$" manage=off
 yabai -m rule --add app="^(Time Machine)$" manage=off
 
 # - for windows that aren't windows
-yabai -m rule --add app!="^(Xcode|Finder)$" title="^$" layer=normal manage=off
+yabai -m rule --add app!="^(Xcode|Finder|iTerm2)$" title="^$" sub-layer=normal manage=off
+
+# - Fullscreen optimized games
+yabai -m rule --add app="^Genshin Impact$" native-fullscreen=on manage=off
+yabai -m rule --add app="^Honkai: Star Rail$" native-fullscreen=on manage=off
+yabai -m rule --add app='java' title='^(Minecraft(\*?) [\d\.]+)$' native-fullscreen=on manage=off
+yabai -m rule --add app='java' title='^Lunar Client' native-fullscreen=on manage=off
 
 #layouts
 echo "configuring layouts and appearance"
@@ -139,29 +152,22 @@ yabai -m config \
     right_padding 4 \
     mouse_modifier ctrl \
     mouse_follows_focus off \
-    focus_follows_mouse off \
+    focus_follows_mouse autoraise \
     window_origin_display cursor \
     window_shadow float \
-    insert_feedback_color      0xffca66ff \
+    insert_feedback_color 0xffca66ff \
     window_opacity               off \
     active_window_opacity        1.0 \
     normal_window_opacity        1.0 \
     window_zoom_persist off \
     split_type auto \
     auto_balance on \
-    layout bsp \
+    display_arrangement_order default \
     window_animation_duration 0.0 \
-    window_animation_frame_rate 60
+    layout bsp
 
 # invoke JankyBorders
-borders \
-    active_color=0xffca66ff \
-    inactive_color=0xff553355 \
-    width=3.0 \
-    order=above \
-    hidpi=on \
-    blacklist=Stickies,"Calculator Plus",universalAccessAuthWarn,coreautha,coreauthd,coreauthagent,coreauthui \
-    2>/dev/null 1>&2 &
+~/.config/borders/bordersrc 2>/dev/null 1>&2 &
 
 # done
 echo "yabai config is now loaded."
@@ -170,3 +176,6 @@ terminal-notifier -title "yabai ready" -message "yabai is fully loaded." -ignore
 # refresh ubersicht again now that we are done
 sh -c "$REL_SPACES_IND"
 sh -c "$REL_BAR_IND"
+
+# apply rules to all existing rules
+yabai -m rule --apply

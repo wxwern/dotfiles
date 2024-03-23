@@ -2,10 +2,10 @@
 :: passthrough : terminal-notifier -title "skhd inactive" -message "all keybindings passed to foreground app" -ignoreDnD
 :: noscripting : terminal-notifier -title "skhd partially active" -message "all keybindings, excluding scripting addition, mapped to yabai wm" -ignoreDnD
 
-fn + ctrl + alt + cmd - x ; passthrough
-passthrough < fn + ctrl + alt + cmd - x ; default
-ctrl + alt + cmd + shift - x ; noscripting
-noscripting < ctrl + alt + cmd + shift - x ; default
+ctrl + alt + cmd + shift - x ; passthrough
+passthrough < ctrl + alt + cmd + shift - x ; default
+ctrl + alt + cmd + shift - s ; noscripting
+noscripting < ctrl + alt + cmd + shift - s ; default
 
 #
 # quick relaunches and configs
@@ -16,6 +16,7 @@ default, noscripting < ctrl + alt + cmd - r : \
     killall Finder; \
     kill -9 $(pgrep bersicht); \
     killall Dock; \
+    brew services restart borders; \
     sleep 3; \
     yabai --restart-service; \
     skhd -r; \

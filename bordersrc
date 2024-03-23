@@ -1,0 +1,12 @@
+#!/bin/bash
+
+options=(
+    active_color="glow(0xffca66ff)"
+    inactive_color=0xff553355
+    width=2.0
+    order=above
+    hidpi=on
+    blacklist=Stickies,"Calculator Plus",universalAccessAuthWarn,coreautha,coreauthd,coreauthagent,coreauthui
+)
+
+borders "${options[@]}"
