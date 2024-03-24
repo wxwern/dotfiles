@@ -33,4 +33,6 @@ launchctl unload -wF /System/Library/LaunchAgents/com.apple.OSDUIHelper.plist
 echo "Installing fonts (user level)..."
 cp -r fonts/* ~/Library/Fonts/
 
-
+# Setup brew autoupdate
+brew autoupdate delete
+brew autoupdate start --upgrade --cleanup --sudo

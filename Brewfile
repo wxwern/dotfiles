@@ -110,6 +110,7 @@ brew "openjdk@17"
 brew "pandoc"
 brew "perl"
 brew "pillow"
+brew "pinentry-mac"
 brew "pipenv", link: false
 brew "pipx"
 brew "posh"
