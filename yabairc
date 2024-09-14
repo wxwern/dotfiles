@@ -11,26 +11,32 @@ fi
 
 # reset configs
 echo "resetting configs" # in case this is a rerun
-for i in $(yabai -m signal --list | jq '.[].index'); do
+
+while [[ "$(yabai -m signal --list | tr -d '[:space:]')" != "[]" ]]; do
     yabai -m signal --remove 0;
 done
-for i in $(yabai -m rule --list | jq '.[].index'); do
+
+while [[ "$(yabai -m rule --list | tr -d '[:space:]')" != "[]" ]]; do
     yabai -m rule --remove 0;
 done
-yabai -m config \
-    window_animation_duration 0.0
+
+yabai -m config window_animation_duration 0.0
 
 # configure clarity updates
 echo "configuring clarity signals"
-REL_SPACES_IND="osascript -e 'tell application id \"tracesof.Uebersicht\" to refresh widget id \"clarity-spaces-jsx\"'"
-REL_BAR_IND="osascript -e 'tell application id \"tracesof.Uebersicht\" to refresh widget id \"clarity-bar-jsx\"'"
-REL_STATUS_IND="osascript -e 'tell application id \"tracesof.Uebersicht\" to refresh widget id \"clarity-status-jsx\"'"
+
+# reformat to multiple lines
+REL_SPACES_IND="osascript -e 'if application id \"tracesof.Uebersicht\" is running then' -e 'tell application id \"tracesof.Uebersicht\"' -e 'refresh widget id \"clarity-spaces-jsx\"' -e 'end tell' -e 'end if'"
+REL_BAR_IND="osascript -e 'if application id \"tracesof.Uebersicht\" is running then' -e 'tell application id \"tracesof.Uebersicht\"' -e 'refresh widget id \"clarity-bar-jsx\"' -e 'end tell' -e 'end if'"
+REL_STATUS_IND="osascript -e 'if application id \"tracesof.Uebersicht\" is running then' -e 'tell application id \"tracesof.Uebersicht\"' -e 'refresh widget id \"clarity-status-jsx\"' -e 'end tell' -e 'end if'"
 
 # - if space indicators are enabled
 yabai -m signal --add event=space_changed   action="$REL_SPACES_IND"
 yabai -m signal --add event=space_created   action="$REL_SPACES_IND"
 yabai -m signal --add event=space_destroyed action="$REL_SPACES_IND"
 yabai -m signal --add event=display_changed action="$REL_SPACES_IND"
+yabai -m signal --add event=system_woke     action="$REL_SPACES_IND"
+yabai -m signal --add event=mission_control_exit action="$REL_SPACES_IND"
 # - if app icon indicators within space indicators are enabled
 yabai -m signal --add event=window_created   action="$REL_SPACES_IND"
 yabai -m signal --add event=window_moved     action="$REL_SPACES_IND"
@@ -46,6 +52,8 @@ yabai -m signal --add event=space_created    action="$REL_BAR_IND"
 yabai -m signal --add event=space_changed    action="$REL_BAR_IND"
 yabai -m signal --add event=space_destroyed    action="$REL_BAR_IND"
 yabai -m signal --add event=display_changed  action="$REL_BAR_IND"
+yabai -m signal --add event=system_woke      action="$REL_BAR_IND"
+yabai -m signal --add event=mission_control_exit action="$REL_BAR_IND"
 # - if wallpaper blur is enabled
 yabai -m signal --add event=window_created   action="$REL_BAR_IND"
 yabai -m signal --add event=window_moved     action="$REL_BAR_IND"
@@ -55,10 +63,10 @@ yabai -m signal --add event=window_minimized   action="$REL_BAR_IND"
 yabai -m signal --add event=window_deminimized action="$REL_BAR_IND"
 yabai -m signal --add event=application_hidden action="$REL_BAR_IND"
 yabai -m signal --add event=application_visible action="$REL_BAR_IND"
-yabai -m signal --add event=mission_control_exit action="$REL_BAR_IND"
 
 # - if status indicators are enabled
 yabai -m signal --add event=display_changed  action="$REL_STATUS_IND"
+yabai -m signal --add event=system_woke      action="$REL_STATUS_IND"
 
 # refresh immediately on yabai load
 echo "reloading widgets"
@@ -81,12 +89,24 @@ POS_FORCE_VAR='pos_x="$(bc -l <<< "$(yabai -m query --displays --window $YABAI_W
 FLOAT_FORCE='yabai -m window $YABAI_WINDOW_ID --toggle float --move abs:$pos_x:$pos_y;'
 yabai -m signal --add event=window_created action="$CHECK_COND_FORCE && $POS_FORCE_VAR && $FLOAT_FORCE"
 
+# - float Finder Info windows (title = "*Info" width <= 400, standard Finder Info window width are always larger than 400), then center it
+#WIDTH400_COND='yabai -m query --windows --window $YABAI_WINDOW_ID | jq -er ".frame.w <= 400"'
+#SUBLAYER_ABOVE='yabai -m window $YABAI_WINDOW_ID --sub-layer above'
+#yabai -m signal --add event=window_created app="^Finder$" title="^.*Info$" action="$WIDTH400_COND && $POS_FORCE_VAR && $FLOAT_FORCE && $SUBLAYER_ABOVE"
+
 # - focus some window on space if destroyed
 FOCUS_ON_DESTORY='sleep 0.5 && (yabai -m query --windows --window || (yabai -m query --spaces --space | jq ".\"first-window\"" | xargs -I {} yabai -m window --focus {} || true))'
 yabai -m signal --add event=window_destroyed action="$FOCUS_ON_DESTORY"
 
 # - focus some window of the app if the front app has switched
 yabai -m signal --add event=application_front_switched action='sleep 0.5 && (yabai -m query --windows --window || (yabai -m query --windows --window | jq ".app" | xargs -I {} yabai -m window --focus {} || true))' # TODO: fix
+
+# - automatically prevent management when time machine browser (app="Finder", title="Timeline Controls", approx full screen) is open
+CHECK_COND_TM='yabai -m query --windows --window $YABAI_WINDOW_ID | jq -er ".frame.x == 0 and .frame.y == 0 and .frame.w >= 640 and .frame.h >= 640"'
+yabai -m rule --add app="^Finder$" title="^Timeline Controls$" sub-layer=below manage=off
+yabai -m signal --add event=window_created app="^Finder$" title="^Timeline Controls$" action="$CHECK_COND_TM && yabai -m space --layout float" # && brew services stop borders"
+yabai -m signal --add event=window_title_changed app="^Finder$" title="^Timeline Controls$" action="$CHECK_COND_TM && yabai -m space --layout float" # && brew services stop borders"
+yabai -m signal --add event=window_destroyed app="^Finder$" title="^Timeline Controls$" action="$CHECK_COND_TM && yabai -m space --layout bsp" # && brew services start borders"
 
 # - remove shadow on float
 #   workaround with 'window_shadow float' to include shadows for unmanaged windows like spotlight, 
@@ -107,7 +127,7 @@ yabai -m rule --add role="^$EXCLUDE_ROLES_REGEX$" manage=off
 yabai -m rule --add subrole="^$EXCLUDE_ROLES_REGEX$" manage=off
 
 yabai -m rule --add app="(^coreauth.*|^universalAccessAuthWarn$)" sub-layer=above manage=off
-yabai -m rule --add app="^Finder$" title="^(Move|Copy|Delete|Connecting to Server)$" sub-layer=above manage=off
+yabai -m rule --add app="^Finder$" title="^(Move|Copy|Delete|Connecting to Server|Bin|Trash)$" sub-layer=above manage=off
 yabai -m rule --add app="^Digital Colou?r Meter$" sub-layer=above manage=off sticky=on
 yabai -m rule --add app="^(Archive Utility|DiskImageMounter|Installer)$" sub-layer=above manage=off
 yabai -m rule --add app="^Macs Fan Control$" sub-layer=above manage=off
@@ -128,14 +148,17 @@ yabai -m rule --add app="^FaceTime$" sub-layer=normal manage=off sticky=on
 
 yabai -m rule --add app="^Xcode$" title="^(Devices|Simulators)$" manage=off
 yabai -m rule --add app="^iStat Menus" manage=off
-yabai -m rule --add app="^Simulator$" manage=off
+yabai -m rule --add app="^Simulator$" manage=off sub-layer=above
+yabai -m rule --add app="^qemu-system-.*" title="^Android Emulator.*" manage=off sub-layer=above
 yabai -m rule --add app="^Delete Apps$" manage=off
 yabai -m rule --add app="bersicht$" sub-layer=below manage=off
 yabai -m rule --add app="^TimeMachineEditor$" manage=off
 yabai -m rule --add app="^Mac Mouse Fix$" manage=off
 yabai -m rule --add app="^NTFS for Mac$" manage=off
+yabai -m rule --add app="^waidayo$" manage=off
 yabai -m rule --add app="^(QuickTime Player|mpv|IINA)$" manage=off
 yabai -m rule --add app="^(Time Machine)$" manage=off
+yabai -m rule --add app="^(Desk View)$" manage=off
 
 # - for windows that aren't windows
 yabai -m rule --add app!="^(Xcode|Finder|iTerm2)$" title="^$" sub-layer=normal manage=off
@@ -143,21 +166,21 @@ yabai -m rule --add app!="^(Xcode|Finder|iTerm2)$" title="^$" sub-layer=normal m
 # - Fullscreen optimized games
 yabai -m rule --add app="^Genshin Impact$" native-fullscreen=on manage=off
 yabai -m rule --add app="^Honkai: Star Rail$" native-fullscreen=on manage=off
-yabai -m rule --add app='java' title='^(Minecraft(\*?) [\d\.]+)$' native-fullscreen=on manage=off
-yabai -m rule --add app='java' title='^Lunar Client' native-fullscreen=on manage=off
+yabai -m rule --add app="^Zenless Zone Zero$" native-fullscreen=on manage=off
+yabai -m rule --add app="^java$" title="Minecraft.? [0-9\\.]+" native-fullscreen=on manage=off
 
 #layouts
 echo "configuring layouts and appearance"
 yabai -m config \
     external_bar all:0:28 \
-    window_gap 8 \
-    top_padding 4 \
-    bottom_padding 4 \
-    left_padding 4 \
-    right_padding 4 \
+    window_gap 6 \
+    top_padding 0 \
+    bottom_padding 0 \
+    left_padding 0 \
+    right_padding 0 \
     mouse_modifier ctrl \
     mouse_follows_focus off \
-    focus_follows_mouse autoraise \
+    focus_follows_mouse off \
     window_origin_display cursor \
     window_shadow float \
     insert_feedback_color 0xffca66ff \
@@ -172,7 +195,7 @@ yabai -m config \
     layout bsp
 
 # invoke JankyBorders
-~/.config/borders/bordersrc 2>/dev/null 1>&2 &
+# ~/.config/borders/bordersrc 2>/dev/null 1>&2 &
 
 # done
 echo "yabai config is now loaded."

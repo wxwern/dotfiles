@@ -11,6 +11,10 @@ defaults write com.apple.finder DisableAllAnimations -bool true
 killall Finder
 # ---
 
+# --- Menu Bar Operations ---
+defaults -currentHost write -globalDomain NSStatusItemSpacing -int 12
+defaults -currentHost write -globalDomain NSStatusItemSelectionPadding -int 8
+
 # --- Dock Operations ---
 # Hide Dock
 echo "'Permanently' hiding the dock..."

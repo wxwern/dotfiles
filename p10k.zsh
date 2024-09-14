@@ -114,7 +114,12 @@
   )
 
   # Defines character set used by powerlevel10k. It's best to let `p10k configure` set it for you.
-  typeset -g POWERLEVEL9K_MODE=nerdfont-complete
+  if [[ ! "$SESSION_TYPE" =~ ^remote/* ]]; then
+    typeset -g POWERLEVEL9K_MODE=nerdfont-complete
+  else
+    # nerdfont and powerline unavailable
+    typeset -g POWERLEVEL9K_MODE=compatible
+  fi
   # When set to `moderate`, some icons will have an extra space after them. This is meant to avoid
   # icon overlap when using non-monospace fonts. When set to `none`, spaces are not added.
   typeset -g POWERLEVEL9K_ICON_PADDING=none
@@ -165,22 +170,36 @@
   # Default background color.
   typeset -g POWERLEVEL9K_BACKGROUND=236
 
-  # Separator between same-color segments on the left.
-  typeset -g POWERLEVEL9K_LEFT_SUBSEGMENT_SEPARATOR='%244F\u2571'
-  # Separator between same-color segments on the right.
-  typeset -g POWERLEVEL9K_RIGHT_SUBSEGMENT_SEPARATOR='%244F\u2571'
-  # Separator between different-color segments on the left.
-  typeset -g POWERLEVEL9K_LEFT_SEGMENT_SEPARATOR='\uE0BC'
-  # Separator between different-color segments on the right.
-  typeset -g POWERLEVEL9K_RIGHT_SEGMENT_SEPARATOR='\uE0BA'
-  # The right end of left prompt.
-  typeset -g POWERLEVEL9K_LEFT_PROMPT_LAST_SEGMENT_END_SYMBOL='\uE0B4'
-  # The left end of right prompt.
-  typeset -g POWERLEVEL9K_RIGHT_PROMPT_FIRST_SEGMENT_START_SYMBOL='\uE0B6'
-  # The left end of left prompt.
-  typeset -g POWERLEVEL9K_LEFT_PROMPT_FIRST_SEGMENT_START_SYMBOL='\uE0B6'
-  # The right end of right prompt.
-  typeset -g POWERLEVEL9K_RIGHT_PROMPT_LAST_SEGMENT_END_SYMBOL='\uE0B4'
+  if [[ ! "$SESSION_TYPE" =~ ^remote/* ]]; then
+    # Separator between same-color segments on the left.
+    typeset -g POWERLEVEL9K_LEFT_SUBSEGMENT_SEPARATOR='%244F\u2571'
+    # Separator between same-color segments on the right.
+    typeset -g POWERLEVEL9K_RIGHT_SUBSEGMENT_SEPARATOR='%244F\u2571'
+    # Separator between different-color segments on the left.
+    typeset -g POWERLEVEL9K_LEFT_SEGMENT_SEPARATOR='\uE0BC'
+    # Separator between different-color segments on the right.
+    typeset -g POWERLEVEL9K_RIGHT_SEGMENT_SEPARATOR='\uE0BA'
+
+    # The right end of left prompt.
+    typeset -g POWERLEVEL9K_LEFT_PROMPT_LAST_SEGMENT_END_SYMBOL='\uE0B4'
+    # The left end of right prompt.
+    typeset -g POWERLEVEL9K_RIGHT_PROMPT_FIRST_SEGMENT_START_SYMBOL='\uE0B6'
+    # The left end of left prompt.
+    typeset -g POWERLEVEL9K_LEFT_PROMPT_FIRST_SEGMENT_START_SYMBOL='\uE0B6'
+    # The right end of right prompt.
+    typeset -g POWERLEVEL9K_RIGHT_PROMPT_LAST_SEGMENT_END_SYMBOL='\uE0B4'
+  else
+    typeset -g POWERLEVEL9K_LEFT_SUBSEGMENT_SEPARATOR='/'
+    typeset -g POWERLEVEL9K_RIGHT_SUBSEGMENT_SEPARATOR='/'
+    typeset -g POWERLEVEL9K_LEFT_SEGMENT_SEPARATOR=
+    typeset -g POWERLEVEL9K_RIGHT_SEGMENT_SEPARATOR=
+
+    typeset -g POWERLEVEL9K_LEFT_PROMPT_LAST_SEGMENT_END_SYMBOL=
+    typeset -g POWERLEVEL9K_RIGHT_PROMPT_FIRST_SEGMENT_START_SYMBOL=
+    typeset -g POWERLEVEL9K_LEFT_PROMPT_FIRST_SEGMENT_START_SYMBOL=
+    typeset -g POWERLEVEL9K_RIGHT_PROMPT_LAST_SEGMENT_END_SYMBOL=
+  fi
+
   # Left prompt terminator for lines without any segments.
   typeset -g POWERLEVEL9K_EMPTY_LINE_LEFT_PROMPT_LAST_SEGMENT_END_SYMBOL=
 

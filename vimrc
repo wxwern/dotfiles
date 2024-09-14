@@ -45,7 +45,9 @@ autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
 
 " configure vim-plug plugins
 set nocompatible
-let g:remoteSession = ($STY != "")
+
+let g:remoteSession = ($SESSION_TYPE =~# '^remote/')
+
 call plug#begin(has('nvim') ? (stdpath('data') . '/plugged') : ('~/.vim/plugged'))
 
 " Syntax highlighting
@@ -74,7 +76,7 @@ nmap <silent> gr <Plug>(coc-references)
 nmap <silent> gk <Plug>(coc-diagnostic-prev)
 nmap <silent> gj <Plug>(coc-diagnostic-next)
 
-" Autocomplete on enter
+" Autocomplete on enter.
 inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm() : "\<C-g>u\<CR>"
 
 " Highlight the symbol and its references when holding the cursor.
@@ -87,9 +89,26 @@ nmap <Leader>rf <Plug>(coc-refactor)
 " Github Copilot
 Plug 'github/copilot.vim'
 let g:copilot_filetypes = { 'markdown': v:true }
+
+if system("curl http://localhost:11435/ 2>&1 | grep \"Empty reply from server\"") != ""
+    echom "Using ollama-copilot's proxy (local predictions)"
+    let g:copilot_proxy = 'http://localhost:11435'
+    let g:copilot_proxy_strict_ssl = v:false
+endif
+
 " cycle copilot suggestions
-"inoremap <C-[> <Plug>(copilot-previous)
-"inoremap <C-]> <Plug>(copilot-next)
+inoremap <A-.> <Plug>(copilot-next)
+inoremap <A-,> <Plug>(copilot-previous)
+inoremap <silent><script><expr> <A-]> copilot#Accept("")
+inoremap <A-[> <Plug>(copilot-dismiss)
+inoremap <A-\> <Plug>(copilot-suggest)
+
+" mac option key equivalent (mac triggers special characters with alt)
+inoremap ≥ <Plug>(copilot-next)
+inoremap ≤ <Plug>(copilot-previous)
+inoremap <silent><script><expr> ‘ copilot#Accept("")
+inoremap “ <Plug>(copilot-dismiss)
+inoremap « <Plug>(copilot-suggest)
 
 " Return to previous location on reopen.
 Plug 'farmergreg/vim-lastplace'
@@ -163,6 +182,9 @@ else
 endif
 
 call plug#end()
+
+" OCaml indentation
+set rtp^="~/.opam/default/share/ocp-indent/vim
 
 " because syntax highlighting randomly breaks
 noremap <Leader>syn <Esc>:syntax sync fromstart<CR>

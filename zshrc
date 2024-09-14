@@ -8,8 +8,11 @@ if [[ -o login ]]; then
         printf '\033[0m'
     fi
 
+    #DISPLAY_NAME="$(id -F)"
+    DISPLAY_NAME="$(id -u -n | awk '{print toupper(substr($0,1,1)) tolower(substr($0,2))}')"
+
     printf '\033[1m'
-    printf "Welcome, $(id -F).\n\n"
+    printf "Welcome, $DISPLAY_NAME.\n\n"
     printf '\033[0m'
 
     # brew upgrade reminders
@@ -85,7 +88,6 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
     source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 
@@ -119,6 +121,9 @@ export UPDATE_ZSH_DAYS=7
 
 # Uncomment the following line to enable command auto-correction.
 ENABLE_CORRECTION="true"
+
+# Prevent auto-corrections to target filenames.
+CORRECT_IGNORE_FILE="[.|_]*"
 
 # Uncomment the following line to display red dots whilst waiting for completion.
 COMPLETION_WAITING_DOTS="true"
@@ -157,6 +162,15 @@ setopt histignorespace
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 
+# zsh completions
+if type brew &>/dev/null; then
+  FPATH=$(brew --prefix)/share/zsh-completions:$FPATH
+  FPATH=$(brew --prefix)/share/zsh/site-functions:$FPATH
+
+  autoload -Uz compinit
+  compinit
+fi
+
 # iTerm2 Shell Integration
 export ITERM2_SQUELCH_MARK=1
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
@@ -169,6 +183,14 @@ export PATH=$HOME/.bun/bin:$PATH
 
 # Golang
 export PATH="$HOME/go/bin:$PATH"
+
+# BEGIN opam configuration
+# This is useful if you're using opam as it adds:
+#   - the correct directories to the PATH
+#   - auto-completion for the opam binary
+# This section can be safely removed at any time if needed.
+[[ ! -r '/Users/wern/.opam/opam-init/init.zsh' ]] || source '/Users/wern/.opam/opam-init/init.zsh' > /dev/null 2> /dev/null
+# END opam configuration
 
 # Android
 export ANDROID_HOME=/Users/$USER/Library/Android/sdk
@@ -198,9 +220,6 @@ fi
 # fzf
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 export FZF_DEFAULT_COMMAND='find . \( -name node_modules -o -name .git \) -prune -o -print'
-
-# bun completions
-[ -s "/usr/local/Cellar/bun/1.0.11/share/zsh/site-functions/_bun" ] && source "/usr/local/Cellar/bun/1.0.11/share/zsh/site-functions/_bun"
 
 # homebrew config
 export HOMEBREW_NO_AUTO_UPDATE=1
@@ -285,18 +304,6 @@ rmtimecode() {
     done
 
     echo "Done!"
-}
-
-docker() {
-  echo "running docker command as \`nerdctl\` via lima-vm"
-  echo " ~> lima nerdctl $@"
-  lima nerdctl "$@"
-}
-
-docker-compose() {
-  echo "running docker-compose command as \`nerdctl compose\` via lima-vm"
-  echo " ~> lima nerdctl compose $@"
-  lima nerdctl compose "$@"
 }
 
 ctf() {
@@ -452,6 +459,3 @@ proctorScreenRec() {
 
 # sourced configs
 source ~/bin/hoard
-
-
-
