@@ -8,12 +8,18 @@ if [[ -o login ]]; then
         printf '\033[0m'
     fi
 
-    #DISPLAY_NAME="$(id -F)"
+    # DISPLAY_NAME="$(id -F)"
     DISPLAY_NAME="$(id -u -n | awk '{print toupper(substr($0,1,1)) tolower(substr($0,2))}')"
 
-    printf '\033[1m'
-    printf "Welcome, $DISPLAY_NAME.\n\n"
-    printf '\033[0m'
+    if [[ -n "$DISPLAY_NAME" ]]; then
+        printf '\033[1m'
+        printf "Welcome, $DISPLAY_NAME.\n\n"
+        printf '\033[0m'
+    else
+        printf '\033[1m'
+        printf "Welcome.\n\n"
+        printf '\033[0m'
+    fi
 
     # brew upgrade reminders
     if [[ -f ~/tmp/brew_outdated_motd.txt ]]; then
@@ -219,7 +225,11 @@ fi
 
 # fzf
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-export FZF_DEFAULT_COMMAND='find . \( -name node_modules -o -name .git \) -prune -o -print'
+export FZF_DEFAULT_COMMAND='
+    fd --type f --strip-cwd-prefix --follow \
+        --exclude .git --exclude node_modules \
+        --exclude build --exclude bin --exclude dist --exclude target --exclude pkg
+'
 
 # homebrew config
 export HOMEBREW_NO_AUTO_UPDATE=1

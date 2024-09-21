@@ -61,7 +61,7 @@ Plug 'evanleck/vim-svelte', {'branch': 'main'}
 " coc
 Plug 'neoclide/coc.nvim', {'branch': 'release' }
 
-" GoTo code navigation.
+" coc: GoTo code navigation.
 nmap <silent> <Leader>dec  <Plug>(coc-declaration)
 nmap <silent> <Leader>def  <Plug>(coc-definition)
 nmap <silent> <Leader>tdef <Plug>(coc-type-definition)
@@ -76,13 +76,32 @@ nmap <silent> gr <Plug>(coc-references)
 nmap <silent> gk <Plug>(coc-diagnostic-prev)
 nmap <silent> gj <Plug>(coc-diagnostic-next)
 
-" Autocomplete on enter.
+" coc: Autocomplete on enter.
 inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm() : "\<C-g>u\<CR>"
 
-" Highlight the symbol and its references when holding the cursor.
+" coc: Helper to display documentation.
+nmap <silent> <Leader>doc  :call <SID>show_documentation()<CR>
+nmap <silent> gh :call <SID>show_documentation()<CR>
+nmap <silent> <A-/> :call <SID>show_documentation()<CR>
+nmap <silent> ÷ :call <SID>show_documentation()<CR>
+
+function! s:show_documentation()
+  if (index(['vim','help'], &filetype) >= 0)
+    execute 'h '.expand('<cword>')
+  else
+    call CocAction('doHover')
+  endif
+endfunction
+
+" coc: Highlight the symbol and its references when holding the cursor.
 autocmd CursorHold * silent call CocActionAsync('highlight')
 
-" Symbol renaming.
+" coc: Toggle display hints
+nnoremap <silent> <Leader>inlay <Esc>:CocCommand document.toggleInlayHint<CR>
+nnoremap <silent> <Leader>hint  <Esc>:CocCommand document.toggleInlayHint<CR>
+nnoremap <silent> <Leader>lens  <Esc>:CocCommand document.toggleCodeLens<CR>
+
+" coc: Symbol renaming.
 nmap <Leader>rn <Plug>(coc-rename)
 nmap <Leader>rf <Plug>(coc-refactor)
 
@@ -99,14 +118,14 @@ endif
 " cycle copilot suggestions
 inoremap <A-.> <Plug>(copilot-next)
 inoremap <A-,> <Plug>(copilot-previous)
-inoremap <silent><script><expr> <A-]> copilot#Accept("")
+inoremap <A-]> <Plug>(copilot-accept-line)
 inoremap <A-[> <Plug>(copilot-dismiss)
 inoremap <A-\> <Plug>(copilot-suggest)
 
 " mac option key equivalent (mac triggers special characters with alt)
 inoremap ≥ <Plug>(copilot-next)
 inoremap ≤ <Plug>(copilot-previous)
-inoremap <silent><script><expr> ‘ copilot#Accept("")
+inoremap ‘ <Plug>(copilot-accept-line)
 inoremap “ <Plug>(copilot-dismiss)
 inoremap « <Plug>(copilot-suggest)
 
@@ -164,7 +183,7 @@ map <C-p> :FZF<CR>
 let g:fzf_action = {
       \ 'ctrl-x': 'split',
       \ 'ctrl-v': 'vsplit' }
-let $FZF_DEFAULT_COMMAND='find . \( -name node_modules -o -name .git \) -prune -o -print'
+let $FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --follow --hidden --exclude .git --exclude node_modules --exclude build --exclude bin --exclude dist --exclude target --exclude pkg'
 
 " Avoid fzf opening in NERDTree window
 nnoremap <silent> <expr> <C-p> (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":FZF\<cr>"
@@ -242,16 +261,20 @@ endfunction
 " reindent entire document, jump back to previous position
 nmap <silent> <Tab> gg=G<C-o><C-o>
 
+" set the color scheme at the end
+colorscheme codedark
+
 " Highlight trailing whitespace
 autocmd ColorScheme * highlight ExtraWhitespace ctermbg=darkred guibg=darkred
 highlight ExtraWhitespace ctermbg=darkred guibg=darkred
 autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
 
-" set the color scheme at the end
-colorscheme codedark
+" coc: styling
+hi CocFloating guibg=#222222
+hi CocFloatingBorder guifg=#888888
 
-
-" remove bg from colorscheme
-autocmd vimenter * hi EndOfBuffer ctermbg=none
+" remove background color from editor
+hi Normal guibg=NONE ctermbg=NONE
+hi EndOfBuffer guibg=NONE ctermbg=NONE
 autocmd vimenter * hi Normal guibg=NONE ctermbg=NONE
-
+autocmd vimenter * hi EndOfBuffer guibg=NONE ctermbg=NONE

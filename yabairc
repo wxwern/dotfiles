@@ -20,7 +20,9 @@ while [[ "$(yabai -m rule --list | tr -d '[:space:]')" != "[]" ]]; do
     yabai -m rule --remove 0;
 done
 
-yabai -m config window_animation_duration 0.0
+yabai -m config \
+    window_animation_duration 0.0 \
+    layout float
 
 # configure clarity updates
 echo "configuring clarity signals"
@@ -46,6 +48,8 @@ yabai -m signal --add event=window_minimized   action="$REL_SPACES_IND"
 yabai -m signal --add event=window_deminimized action="$REL_SPACES_IND"
 yabai -m signal --add event=application_hidden action="$REL_SPACES_IND"
 yabai -m signal --add event=application_visible action="$REL_SPACES_IND"
+yabai -m signal --add event=application_launched action="$REL_SPACES_IND"
+yabai -m signal --add event=application_terminated action="$REL_SPACES_IND"
 
 # - if center space indicators are enabled
 yabai -m signal --add event=space_created    action="$REL_BAR_IND"
@@ -63,6 +67,8 @@ yabai -m signal --add event=window_minimized   action="$REL_BAR_IND"
 yabai -m signal --add event=window_deminimized action="$REL_BAR_IND"
 yabai -m signal --add event=application_hidden action="$REL_BAR_IND"
 yabai -m signal --add event=application_visible action="$REL_BAR_IND"
+yabai -m signal --add event=application_launched action="$REL_BAR_IND"
+yabai -m signal --add event=application_terminated action="$REL_BAR_IND"
 
 # - if status indicators are enabled
 yabai -m signal --add event=display_changed  action="$REL_STATUS_IND"
@@ -76,23 +82,42 @@ sh -c "$REL_STATUS_IND"
 
 # exceptions to apps and things that tend to not work well
 echo "configuring exceptions"
+QUERY_WINDOW_DATA='WINDOW_DATA=$(yabai -m query --windows --window $YABAI_WINDOW_ID)'
 
 # - auto unzoom when switching windows (ref: https://github.com/koekeishiya/yabai/issues/1481#issuecomment-1287596830)
-yabai -m signal --add event=window_focused action='if [[ $(yabai -m query --windows --window | jq ".\"is-floating\"") == "false" ]]; then
-win_id=$(yabai -m query --windows --space | jq "map(select(.\"has-fullscreen-zoom\" and (.\"has-focus\" | not)))[0].id")
-if [[ $win_id != "null" ]]; then yabai -m window $win_id --toggle zoom-fullscreen; fi
-fi'
+yabai -m signal --add event=window_focused action='
+    if [[ $(yabai -m query --windows --window | jq ".\"is-floating\"") == "false" ]]; then
+        win_id=$(yabai -m query --windows --space | jq "map(select(.\"has-fullscreen-zoom\" and (.\"has-focus\" | not)))[0].id")
+        if [[ $win_id != "null" ]]; then
+            yabai -m window $win_id --toggle zoom-fullscreen;
+        fi
+    fi
+'
 
 # - float if window is not resizable
-CHECK_COND_FORCE='yabai -m query --windows --window $YABAI_WINDOW_ID | jq -er ".\"can-resize\" == false and .\"is-floating\" == false"'
-POS_FORCE_VAR='pos_x="$(bc -l <<< "$(yabai -m query --displays --window $YABAI_WINDOW_ID | jq ".frame.w/2") - $(yabai -m query --windows --window $YABAI_WINDOW_ID | jq ".frame.w/2") + $(yabai -m query --displays --window $YABAI_WINDOW_ID | jq ".frame.x")")" pos_y="$(bc -l <<< "$(yabai -m query --displays --window $YABAI_WINDOW_ID | jq ".frame.h/2") - $(yabai -m query --windows --window $YABAI_WINDOW_ID | jq ".frame.h/2") + $(yabai -m query --displays --window $YABAI_WINDOW_ID | jq ".frame.y")")"'
-FLOAT_FORCE='yabai -m window $YABAI_WINDOW_ID --toggle float --move abs:$pos_x:$pos_y;'
-yabai -m signal --add event=window_created action="$CHECK_COND_FORCE && $POS_FORCE_VAR && $FLOAT_FORCE"
+# - and automatically use padded center for floating windows
+EXCLUDE_CENTER_ROLES_REGEX="(AXMenu|AXSheet|AXDialog|AXSystemDialog|AXPopover)"
+CHECK_UNFLOATED_UNRESIZABLE='printf "$WINDOW_DATA" | jq -er ".\"can-resize\" == false and .\"is-floating\" == false"'
+CHECK_IS_FLOATING='printf "$WINDOW_DATA" | jq -er ".\"is-floating\""'
+CHECK_IS_NOT_EXCLUDED_ROLE='printf "$WINDOW_DATA" | jq -r ".role" | grep -vE "'"$EXCLUDE_CENTER_ROLES_REGEX"'"'
+CHECK_IS_NOT_EXCLUDED_SUBROLE='printf "$WINDOW_DATA" | jq -r ".subrole" | grep -vE "'"$EXCLUDE_CENTER_ROLES_REGEX"'"'
+CENTER_AND_FLOAT_WINDOW='(
+    echo "centering and floating window $YABAI_WINDOW_ID with data=$WINDOW_DATA";
+    WINDOW_DATA=$(yabai -m query --windows --window $YABAI_WINDOW_ID);
+    (printf "$WINDOW_DATA" | jq -er ".\"is-floating\" == false") && yabai -m window $YABAI_WINDOW_ID --toggle float;
+    (printf "$WINDOW_DATA" | jq -er ".\"can-resize\"") && yabai -m window $YABAI_WINDOW_ID --grid 8:8:1:1:6:6;
+    DISPLAY_DATA=$(yabai -m query --displays --display);
+    WINDOW_DATA=$(yabai -m query --windows --window $YABAI_WINDOW_ID);
+    pos_x="$(printf "[$DISPLAY_DATA, $WINDOW_DATA]" | jq ".[0].frame.w/2 - .[1].frame.w/2 + .[0].frame.x")";
+    pos_y="$(printf "[$DISPLAY_DATA, $WINDOW_DATA]" | jq ".[0].frame.h/2 - .[1].frame.h/2 + .[0].frame.y")";
+    yabai -m window $YABAI_WINDOW_ID --move abs:$pos_x:$pos_y;
+)'
+yabai -m signal --add event=window_created action="$QUERY_WINDOW_DATA; ($CHECK_IS_FLOATING || $CHECK_UNFLOATED_UNRESIZABLE) && ($CHECK_IS_NOT_EXCLUDED_ROLE && $CHECK_IS_NOT_EXCLUDED_SUBROLE) && $CENTER_AND_FLOAT_WINDOW"
 
 # - float Finder Info windows (title = "*Info" width <= 400, standard Finder Info window width are always larger than 400), then center it
-#WIDTH400_COND='yabai -m query --windows --window $YABAI_WINDOW_ID | jq -er ".frame.w <= 400"'
-#SUBLAYER_ABOVE='yabai -m window $YABAI_WINDOW_ID --sub-layer above'
-#yabai -m signal --add event=window_created app="^Finder$" title="^.*Info$" action="$WIDTH400_COND && $POS_FORCE_VAR && $FLOAT_FORCE && $SUBLAYER_ABOVE"
+CHECK_WIDTH_MAX_400='(printf "$WINDOW_DATA" | jq -er ".frame.w <= 400")'
+SET_SUBLAYER_ABOVE='yabai -m window $YABAI_WINDOW_ID --sub-layer above'
+yabai -m signal --add event=window_created app="^Finder$" title="^.*Info$" action="$QUERY_WINDOW_DATA; ($CHECK_WIDTH_MAX_400 && $FLOAT_WINDOW && $SET_SUBLAYER_ABOVE)"
 
 # - focus some window on space if destroyed
 FOCUS_ON_DESTORY='sleep 0.5 && (yabai -m query --windows --window || (yabai -m query --spaces --space | jq ".\"first-window\"" | xargs -I {} yabai -m window --focus {} || true))'
@@ -108,23 +133,14 @@ yabai -m signal --add event=window_created app="^Finder$" title="^Timeline Contr
 yabai -m signal --add event=window_title_changed app="^Finder$" title="^Timeline Controls$" action="$CHECK_COND_TM && yabai -m space --layout float" # && brew services stop borders"
 yabai -m signal --add event=window_destroyed app="^Finder$" title="^Timeline Controls$" action="$CHECK_COND_TM && yabai -m space --layout bsp" # && brew services start borders"
 
-# - remove shadow on float
-#   workaround with 'window_shadow float' to include shadows for unmanaged windows like spotlight, 
-#   but we don't want shadows for yabai-managed floating windows
-#
-# REMOVE_FLOATING_SHADOW='if [[ $(yabai -m query --windows --window $YABAI_WINDOW_ID | jq ".\"is-floating\" and .\"has-shadow\"") == "true" ]]; then yabai -m window $YABAI_WINDOW_ID --toggle shadow; fi'
-# REMOVE_FLOATING_SHADOW_EXCEPTIONS="^(coreautha)$"
-# yabai -m signal --add event=window_focused action="$REMOVE_FLOATING_SHADOW" app!="$REMOVE_FLOATING_SHADOW_EXCEPTIONS"
-# yabai -m signal --add event=window_moved action="$REMOVE_FLOATING_SHADOW" app!="$REMOVE_FLOATING_SHADOW_EXCEPTIONS"
-
 # - if role is AXSheet, then disable borders temporarily
 #yabai -m signal --add event=window_focused action='if [[ $(yabai -m query --windows --window | jq ".role") == "\"AXSheet\"" ]]; then borders active_color=0x00000000; fi';
 #yabai -m signal --add event=window_focused action='if [[ $(yabai -m query --windows --window | jq ".role") != "\"AXSheet\"" ]]; then ~/.config/borders/bordersrc 2>/dev/null 1>&2; fi';
 
 # - other rules
-EXCLUDE_ROLES_REGEX="(AXMenu|AXSheet|AXDialog|AXPopover|AXSystemDialog|AXFloatingWindow|AXSystemFloatingWindow)"
-yabai -m rule --add role="^$EXCLUDE_ROLES_REGEX$" manage=off
-yabai -m rule --add subrole="^$EXCLUDE_ROLES_REGEX$" manage=off
+EXCLUDE_MANAGE_ROLES_REGEX="(AXMenu|AXSheet|AXDialog|AXPopover|AXSystemDialog|AXFloatingWindow|AXSystemFloatingWindow)"
+yabai -m rule --add role="^$EXCLUDE_MANAGE_ROLES_REGEX$" manage=off
+yabai -m rule --add subrole="^$EXCLUDE_MANAGE_ROLES_REGEX$" manage=off
 
 yabai -m rule --add app="(^coreauth.*|^universalAccessAuthWarn$)" sub-layer=above manage=off
 yabai -m rule --add app="^Finder$" title="^(Move|Copy|Delete|Connecting to Server|Bin|Trash)$" sub-layer=above manage=off
@@ -150,6 +166,8 @@ yabai -m rule --add app="^Xcode$" title="^(Devices|Simulators)$" manage=off
 yabai -m rule --add app="^iStat Menus" manage=off
 yabai -m rule --add app="^Simulator$" manage=off sub-layer=above
 yabai -m rule --add app="^qemu-system-.*" title="^Android Emulator.*" manage=off sub-layer=above
+yabai -m rule --add app="^iPhone Mirroring$" manage=off sub-layer=above
+yabai -m rule --add app="^Music$" title="^Mini Player$" manage=off
 yabai -m rule --add app="^Delete Apps$" manage=off
 yabai -m rule --add app="bersicht$" sub-layer=below manage=off
 yabai -m rule --add app="^TimeMachineEditor$" manage=off
@@ -161,7 +179,7 @@ yabai -m rule --add app="^(Time Machine)$" manage=off
 yabai -m rule --add app="^(Desk View)$" manage=off
 
 # - for windows that aren't windows
-yabai -m rule --add app!="^(Xcode|Finder|iTerm2)$" title="^$" sub-layer=normal manage=off
+yabai -m rule --add app!="^(Xcode|Finder|iTerm2|Photos)$" title="^$" sub-layer=normal manage=off
 
 # - Fullscreen optimized games
 yabai -m rule --add app="^Genshin Impact$" native-fullscreen=on manage=off

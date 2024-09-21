@@ -248,7 +248,7 @@ default, noscripting < ctrl + cmd - f :
 
 # center floating window
 default, noscripting < shift + ctrl + alt - c : #center and resize \
-    yabai -m window --grid 8:8:1:1:6:6; \
+    (yabai -m query --windows --window | jq -er ".\"can-resize\"") && yabai -m window --grid 8:8:1:1:6:6; \
     display_data=$(yabai -m query --displays --display); \
     window_data=$(yabai -m query --windows --window); \
     pos_x="$(printf "[$display_data, $window_data]" | jq '.[0].frame.w/2 - .[1].frame.w/2 + .[0].frame.x')"; \
@@ -290,6 +290,24 @@ default, noscripting < ctrl + alt - t : yabai -m window --grid 1:3:1:0:2:1 #2/3 
 
 # maximize floating or tiled window
 default, noscripting < ctrl + alt - m : yabai -m window --grid 1:1:0:0:1:1 || yabai -m window --toggle zoom-fullscreen #maximize
+
+# override macos sequoia tiling shortcuts
+default, noscripting < fn + ctrl - 0x73: true; # left (home)
+default, noscripting < fn + ctrl - 0x74: true; # up (page up)
+default, noscripting < fn + ctrl - 0x77: true; # right (end)
+default, noscripting < fn + ctrl - 0x79: true; # down (page down)
+
+default, noscripting < fn + shift + ctrl - 0x73: true;
+default, noscripting < fn + shift + ctrl - 0x74: true;
+default, noscripting < fn + shift + ctrl - 0x77: true;
+default, noscripting < fn + shift + ctrl - 0x79: true;
+
+default, noscripting < fn + alt + shift + ctrl - 0x73: true;
+default, noscripting < fn + alt + shift + ctrl - 0x74: true;
+default, noscripting < fn + alt + shift + ctrl - 0x77: true;
+default, noscripting < fn + alt + shift + ctrl - 0x79: true;
+
+default, noscripting < fn + ctrl - r: true;
 
 # shortcuts
 default, noscripting < ctrl + cmd - t : \
