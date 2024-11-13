@@ -10,6 +10,7 @@ set tabstop=4
 set shiftwidth=4
 set softtabstop=4
 set expandtab
+set shortmess-=F " give file info messages
 set ssop-=options " do not store global and local values in a session
 set autoread  "auto read files updated from external sources
 set showmatch "show matching brackets when cursor is over one
@@ -22,8 +23,13 @@ set exrc    " Load local vimrc if found
 set cursorline
 set signcolumn=number
 set updatetime=500
+set foldmethod=indent
+set foldminlines=10
+set foldlevelstart=10
 set history=1000
 set tabpagemax=50
+set splitbelow
+set splitright
 set display+=lastline
 set scrolloff=10
 set fillchars+=stl:\ ,stlnc:\
@@ -57,9 +63,18 @@ let g:polyglot_disabled = ['sensible']
 " Svelte syntax highlighting
 Plug 'evanleck/vim-svelte', {'branch': 'main'}
 
+" code folding
+set foldmethod=syntax
+
+" map space to fold
+nnoremap <space> za
+
+" map left to 'zc' to fold, map right to 'zo' to unfold
+nnoremap <A-M-Left>  zc
+nnoremap <A-M-Right> zo
 
 " coc
-Plug 'neoclide/coc.nvim', {'branch': 'release' }
+Plug 'neoclide/coc.nvim', { 'branch': 'release' }
 
 " coc: GoTo code navigation.
 nmap <silent> <Leader>dec  <Plug>(coc-declaration)
@@ -97,17 +112,20 @@ endfunction
 autocmd CursorHold * silent call CocActionAsync('highlight')
 
 " coc: Toggle display hints
-nnoremap <silent> <Leader>inlay <Esc>:CocCommand document.toggleInlayHint<CR>
-nnoremap <silent> <Leader>hint  <Esc>:CocCommand document.toggleInlayHint<CR>
-nnoremap <silent> <Leader>lens  <Esc>:CocCommand document.toggleCodeLens<CR>
+nnoremap <Leader>inlay <Esc>:CocCommand document.toggleInlayHint<CR>
+nnoremap <Leader>hint  <Esc>:CocCommand document.toggleInlayHint<CR>
+nnoremap <Leader>lens  <Esc>:CocCommand document.toggleCodeLens<CR>
 
 " coc: Symbol renaming.
-nmap <Leader>rn <Plug>(coc-rename)
-nmap <Leader>rf <Plug>(coc-refactor)
+nnoremap <silent> <Leader>rn <Plug>(coc-rename)
+nnoremap <silent> <Leader>rf <Plug>(coc-refactor)
+
+" coc: Hide on escape.
+nmap <silent> <Esc> :call coc#float#close_all() <CR>
 
 " Github Copilot
 Plug 'github/copilot.vim'
-let g:copilot_filetypes = { 'markdown': v:true }
+let g:copilot_filetypes = { 'markdown': v:true, 'ws': v:false }
 
 if system("curl http://localhost:11435/ 2>&1 | grep \"Empty reply from server\"") != ""
     echom "Using ollama-copilot's proxy (local predictions)"
@@ -183,7 +201,7 @@ map <C-p> :FZF<CR>
 let g:fzf_action = {
       \ 'ctrl-x': 'split',
       \ 'ctrl-v': 'vsplit' }
-let $FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --follow --hidden --exclude .git --exclude node_modules --exclude build --exclude bin --exclude dist --exclude target --exclude pkg'
+let $FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --follow --hidden --exclude .git --exclude node_modules --exclude build --exclude dist --exclude target --exclude pkg'
 
 " Avoid fzf opening in NERDTree window
 nnoremap <silent> <expr> <C-p> (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":FZF\<cr>"
@@ -248,7 +266,13 @@ augroup END
 autocmd FileType make set tabstop=8 shiftwidth=8 softtabstop=0 noexpandtab
 
 " Show tabs, spaces and newlines in whitespace files (.ws)
-autocmd FileType *.ws set tabstop=8 shiftwidth=8 softtabstop=0 noexpandtab list listchars=tab:»\ ,trail:·,nbsp:·,eol:¬
+augroup wsfiledetect
+  autocmd FileType ws set tabstop=2 shiftwidth=2 softtabstop=0 noexpandtab list listchars=tab:»\ ,trail:·,nbsp:·,eol:¬,lead:·,extends:>,precedes:<
+
+  autocmd FileType ws let g:indentLine_enabled = 0
+
+  autocmd BufRead *.ws setfiletype ws
+augroup END
 
 " helper tab width as spaces count (does not auto reindent)
 function SetTabWidth(n)
@@ -258,23 +282,33 @@ function SetTabWidth(n)
   set expandtab
 endfunction
 
+" set column line
+set colorcolumn=121
+
 " reindent entire document, jump back to previous position
 nmap <silent> <Tab> gg=G<C-o><C-o>
 
 " set the color scheme at the end
 colorscheme codedark
 
-" Highlight trailing whitespace
+" highlight trailing whitespace
 autocmd ColorScheme * highlight ExtraWhitespace ctermbg=darkred guibg=darkred
-highlight ExtraWhitespace ctermbg=darkred guibg=darkred
 autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
+highlight ExtraWhitespace ctermbg=darkred guibg=darkred
+
+" shortcut to clean trailing whitespace
+nnoremap <Leader><space> :%s/\s\+$//g<CR>
+
+" override folded format
+highlight Folded ctermfg=white guifg=white guibg=#555555
+highlight FoldColumn ctermfg=grey guifg=grey guibg=black
 
 " coc: styling
 hi CocFloating guibg=#222222
 hi CocFloatingBorder guifg=#888888
 
 " remove background color from editor
-hi Normal guibg=NONE ctermbg=NONE
-hi EndOfBuffer guibg=NONE ctermbg=NONE
-autocmd vimenter * hi Normal guibg=NONE ctermbg=NONE
-autocmd vimenter * hi EndOfBuffer guibg=NONE ctermbg=NONE
+" hi Normal guibg=NONE ctermbg=NONE
+" hi EndOfBuffer guibg=NONE ctermbg=NONE
+" autocmd vimenter * hi Normal guibg=NONE ctermbg=NONE
+" autocmd vimenter * hi EndOfBuffer guibg=NONE ctermbg=NONE

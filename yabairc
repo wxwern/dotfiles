@@ -103,10 +103,20 @@ CHECK_IS_NOT_EXCLUDED_ROLE='printf "$WINDOW_DATA" | jq -r ".role" | grep -vE "'"
 CHECK_IS_NOT_EXCLUDED_SUBROLE='printf "$WINDOW_DATA" | jq -r ".subrole" | grep -vE "'"$EXCLUDE_CENTER_ROLES_REGEX"'"'
 CENTER_AND_FLOAT_WINDOW='(
     echo "centering and floating window $YABAI_WINDOW_ID with data=$WINDOW_DATA";
-    WINDOW_DATA=$(yabai -m query --windows --window $YABAI_WINDOW_ID);
-    (printf "$WINDOW_DATA" | jq -er ".\"is-floating\" == false") && yabai -m window $YABAI_WINDOW_ID --toggle float;
-    (printf "$WINDOW_DATA" | jq -er ".\"can-resize\"") && yabai -m window $YABAI_WINDOW_ID --grid 8:8:1:1:6:6;
     DISPLAY_DATA=$(yabai -m query --displays --display);
+    WINDOW_DATA=$(yabai -m query --windows --window $YABAI_WINDOW_ID);
+
+    if (printf "$WINDOW_DATA" | jq -er ".\"is-floating\" == false"); then
+        yabai -m window $YABAI_WINDOW_ID --toggle float;
+    fi;
+
+    if (
+        (printf "$WINDOW_DATA" | jq -er ".\"can-resize\"") &&
+        (printf "[$DISPLAY_DATA, $WINDOW_DATA]" | jq -er ".[1].frame.w > .[0].frame.w * 3/4 or .[1].frame.h > .[0].frame.h * 3/4")
+    ); then
+        yabai -m window $YABAI_WINDOW_ID --grid 8:8:1:1:6:6;
+    fi;
+
     WINDOW_DATA=$(yabai -m query --windows --window $YABAI_WINDOW_ID);
     pos_x="$(printf "[$DISPLAY_DATA, $WINDOW_DATA]" | jq ".[0].frame.w/2 - .[1].frame.w/2 + .[0].frame.x")";
     pos_y="$(printf "[$DISPLAY_DATA, $WINDOW_DATA]" | jq ".[0].frame.h/2 - .[1].frame.h/2 + .[0].frame.y")";
@@ -155,6 +165,7 @@ yabai -m rule --add title="^(Settings|Preferences)$" sub-layer=normal manage=off
 yabai -m rule --add app="^(System Settings|System Preferences)$" sub-layer=normal manage=off
 yabai -m rule --add title="^Problem Report for" sub-layer=normal manage=off
 yabai -m rule --add app="^(Calculator|Calculator Plus)$" sub-layer=normal manage=off
+yabai -m rule --add app="^ChatGPT$" title="^$" sub-layer=normal manage=off
 yabai -m rule --add app="^Safari$" title="^(General|Privacy|Security|Search|Extensions|Websites|Advanced|Develop|Accounts|AutoFill|Notifications|Password|Tabs|Media)$" sub-layer=normal manage=off
 # yabai -m rule --add app="^Parallels Desktop" title="(Settings|Preferences|Configuration|Control Cent(re|er))$" sub-layer=normal manage=off
 yabai -m rule --add app="^Parallels Desktop" sub-layer=normal manage=off
@@ -177,6 +188,7 @@ yabai -m rule --add app="^waidayo$" manage=off
 yabai -m rule --add app="^(QuickTime Player|mpv|IINA)$" manage=off
 yabai -m rule --add app="^(Time Machine)$" manage=off
 yabai -m rule --add app="^(Desk View)$" manage=off
+yabai -m rule --add app="^(Screen Sharing)$" title!="^(All Connections)$" manage=off
 
 # - for windows that aren't windows
 yabai -m rule --add app!="^(Xcode|Finder|iTerm2|Photos)$" title="^$" sub-layer=normal manage=off
@@ -211,6 +223,8 @@ yabai -m config \
     display_arrangement_order default \
     window_animation_duration 0.0 \
     layout bsp
+
+yabai -m config --space 1 layout stack
 
 # invoke JankyBorders
 # ~/.config/borders/bordersrc 2>/dev/null 1>&2 &

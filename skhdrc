@@ -168,28 +168,26 @@ default, noscripting < ctrl + cmd - right : yabai -m window --warp east
 # move window in as stack or cycle
 # stack behaviour: stack focused window on last index of the other referenced stack in the given direction
 default, noscripting < ctrl + alt + cmd - up   : \
-    yabai -m query --windows --window | jq '."stack-index" >= 1' && \
-    yabai -m window --focus stack.next || \
+    (yabai -m query --windows --window | jq '."stack-index" >= 1' && yabai -m window --focus stack.next) || \
     ( \
-        yabai -m window --focus north && (yabai -m window --focus stack.last || yabai -m window --focus south) && \
+        ((yabai -m window north --focus stack.last && yabai -m window --focus south) || true) && \
         yabai -m window north --stack "$(yabai -m query --windows --window | jq '.id')" && \
         terminal-notifier -title "Window stacked!" -subtitle "Window stacked onto window above." -ignoreDnD \
     );
 default, noscripting < ctrl + alt + cmd - down : \
-    yabai -m query --windows --window | jq '."stack-index" >= 1' && \
-    yabai -m window --focus stack.prev || \
+    (yabai -m query --windows --window | jq '."stack-index" >= 1' && yabai -m window --focus stack.prev) || \
     ( \
-        yabai -m window --focus south && (yabai -m window --focus stack.last || yabai -m window --focus north) && \
+        ((yabai -m window south --focus stack.last && yabai -m window --focus north) || true) && \
         yabai -m window south --stack "$(yabai -m query --windows --window | jq '.id')" && \
         terminal-notifier -title "Window stacked!" -subtitle "Window stacked onto window below." -ignoreDnD \
     );
 default, noscripting < ctrl + alt + cmd - left  : ( \
-        yabai -m window --focus west && (yabai -m window --focus stack.last || yabai -m window --focus east) && \
+        ((yabai -m window west --focus stack.last && yabai -m window --focus east) || true) && \
         yabai -m window west --stack "$(yabai -m query --windows --window | jq '.id')" && \
         terminal-notifier -title "Window stacked!" -subtitle "Window stacked onto left window." -ignoreDnD \
     );
 default, noscripting < ctrl + alt + cmd - right : ( \
-        yabai -m window --focus east && (yabai -m window --focus stack.last || yabai -m window --focus west) && \
+        ((yabai -m window east --focus stack.last && yabai -m window --focus west) || true) && \
         yabai -m window east --stack "$(yabai -m query --windows --window | jq '.id')" && \
         terminal-notifier -title "Window stacked!" -subtitle "Window stacked onto right window." -ignoreDnD \
     );
@@ -260,6 +258,13 @@ default, noscripting < ctrl + alt - c         : # center only \
     pos_x="$(printf "[$display_data, $window_data]" | jq '.[0].frame.w/2 - .[1].frame.w/2 + .[0].frame.x')"; \
     pos_y="$(printf "[$display_data, $window_data]" | jq '.[0].frame.h/2 - .[1].frame.h/2 + .[0].frame.y')"; \
     yabai -m window --move abs:$pos_x:$pos_y;
+default, noscripting < fn + ctrl - c         : # center only \
+    display_data=$(yabai -m query --displays --display); \
+    window_data=$(yabai -m query --windows --window); \
+    pos_x="$(printf "[$display_data, $window_data]" | jq '.[0].frame.w/2 - .[1].frame.w/2 + .[0].frame.x')"; \
+    pos_y="$(printf "[$display_data, $window_data]" | jq '.[0].frame.h/2 - .[1].frame.h/2 + .[0].frame.y')"; \
+    yabai -m window --move abs:$pos_x:$pos_y;
+
 
 
 # corner floating window snapping
@@ -308,6 +313,9 @@ default, noscripting < fn + alt + shift + ctrl - 0x77: true;
 default, noscripting < fn + alt + shift + ctrl - 0x79: true;
 
 default, noscripting < fn + ctrl - r: true;
+default, noscripting < fn + ctrl - f: yabai -m window --toggle zoom-fullscreen;
+default, noscripting < shift + cmd - 0: yabai -m window --toggle zoom-fullscreen;
+
 
 # shortcuts
 default, noscripting < ctrl + cmd - t : \
@@ -399,10 +407,17 @@ alt + ctrl - 0x18 : \
 
 # delete current space
 alt + ctrl - 0x1B : \
-    yabai -m space --destroy || \
-    (terminal-notifier -title "Can't Delete Space" -subtitle "Either this is the only space left on this display, or yabai scripting-addition failed." -ignoreDnD && \
-    osascript -e "$(printf "beep\ndelay 1")"); \
-    osascript -e "tell application id \"tracesof.uebersicht\" to refresh widget id \"clarity-spaces-jsx\""
+    NEXT_SPACE_TO_FOCUS="$( \
+        yabai -m query --spaces | \
+        jq '(.[] | select(."has-focus") | .index) - (if (.[] | select(."has-focus" == true) | .index) >= (sort_by(.index)[-1].index) then 1 else 0 end)' \
+    )"; \
+    ([ "$(yabai -m query --windows --space | jq length)" = "0" ] || osascript -e 'tell application "System Events" to display dialog "Delete Current Space?" buttons {"Cancel", "Delete"} default button "Delete" with icon caution') && \
+    (yabai -m space --destroy || ( \
+        terminal-notifier -title "Can't Delete Space" -subtitle "Either this is the only space left on this display, or yabai scripting-addition failed." -ignoreDnD && \
+        osascript -e "$(printf "beep\ndelay 1")" \
+    )) && yabai -m space --focus $NEXT_SPACE_TO_FOCUS; \
+    osascript -e "tell application id \"tracesof.uebersicht\" to refresh widget id \"clarity-spaces-jsx\"";
+
 
 
 # switch display focus

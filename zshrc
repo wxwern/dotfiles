@@ -228,7 +228,7 @@ fi
 export FZF_DEFAULT_COMMAND='
     fd --type f --strip-cwd-prefix --follow \
         --exclude .git --exclude node_modules \
-        --exclude build --exclude bin --exclude dist --exclude target --exclude pkg
+        --exclude build --exclude dist --exclude target --exclude pkg
 '
 
 # homebrew config
@@ -255,10 +255,69 @@ export TERM="xterm-256color"
 # === My aliases and helper functions ===
 alias vim="echo 'note: using nvim'; nvim" # use nvim instead of vim, old habits die hard
 alias cp="cp -c" # use macOS APFS cloning by default
-alias ctfvm="limactl shell ctfvm"
-alias ctfvmrosetta="limactl shell ctfvm-rosetta"
 alias tetris="autoload -Uz tetriscurses && tetriscurses"
 alias obsbrowsercam="/Applications/OBS.app/Contents/MacOS/obs --enable-gpu --use-fake-ui-for-media-stream >> /dev/null 2>&1"
+
+# VMs
+alias ctfvm="limactl shell ctfvm"
+alias ctfvmrosetta="limactl shell ctfvm-rosetta"
+
+androidvm() {
+    ANDROID_VM_PID=$(pgrep -L qemu-system | grep -e Android_VM | awk '{print $1}')
+
+    if [ -z "$1" ]; then
+        echo 'Usage: androidvm (start|stop) [args]'
+        echo
+        if [ -n "$ANDROID_VM_PID" ]; then
+            echo 'Android VM is running.'
+            echo " > PID: $ANDROID_VM_PID"
+            echo
+            echo 'Use `androidvm stop` to stop it.'
+        else
+            echo 'Android VM is not running.'
+            echo
+            echo 'Use `androidvm start` to start it.'
+        fi
+        return 0
+    fi
+
+    if [ "$1" = "start" ]; then
+        if [ -n "$ANDROID_VM_PID" ]; then
+            echo 'Android VM already running.'
+            echo " > PID: $ANDROID_VM_PID"
+            echo 'Use `androidvm stop` to stop it.'
+        else
+            ANDROID_VM_ARGS=${@:2}
+
+            echo "Starting Android VM..."
+            echo " > emulator -avd Android_VM $ANDROID_VM_ARGS -feature -Vulkan"
+            eval "emulator -avd Android_VM $ANDROID_VM_ARGS -feature -Vulkan" &>/dev/null & disown;
+            echo "Launched Android VM."
+        fi
+    elif [ "$1" = "stop" ]; then
+        if [ -z "$ANDROID_VM_PID" ]; then
+            echo 'Android VM not running.'
+            return 0
+        fi
+
+        echo "Stopping Android VM (PID: $ANDROID_VM_PID)..."
+        kill -15 "$ANDROID_VM_PID" && echo 'Sent SIGTERM.'
+
+        if [ "$?" -ne 0 ]; then
+            echo "Error: Could not stop Android VM."
+            return 1
+        else
+            # wait for the process to exist
+            echo "Waiting for Android VM to stop..."
+            while (ps -p "$ANDROID_VM_PID" > /dev/null); do
+                sleep 1
+            done
+            echo "Android VM stopped."
+        fi
+    else
+        echo 'Usage: androidvm (start|stop) [args]'
+    fi
+}
 
 yarn-sync() {
     # sync package.json to match yarn.lock
