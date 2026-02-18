@@ -1,8 +1,13 @@
+_IS_MACOS=false
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    _IS_MACOS=true
+fi
+
 # custom prompts if login session
 if [[ -o login ]]; then
 
     printf '\n'
-    if [[ "$(uname -s)" != "Darwin" ]]; then
+    if [[ "$_IS_MACOS" == false ]]; then
         printf '\033[0;31m'
         printf 'This is not a macOS system - this zshrc may not work as expected.\n'
         printf '\033[0m'
@@ -186,9 +191,7 @@ test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell
 export PATH=$HOME/.bun/bin:$PATH
 
 # Rust cargo
-if [[ -d "$HOME/.cargo" ]]; then
-    . "$HOME/.cargo/env"
-fi
+[[ ! -d "$HOME/.cargo" ]] || . "$HOME/.cargo/env"
 
 # Golang
 export PATH="$HOME/go/bin:$PATH"
@@ -244,33 +247,38 @@ export TERM="xterm-256color"
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
 
-#prompt_context() {
-#    if [[ "$USER" != "$DEFAULT_USER" || -n "$SSH_CLIENT" ]]; then
-#        prompt_segment black default "%(!.%{%F{yellow}%}.)$USER"
-#    fi
-#}
-
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
 # plugins, and themes. Aliases can be placed here, though oh-my-zsh
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
 # For a full list of active aliases, run `alias`.
 
 # === My aliases and helper functions ===
-if [[ -x "$(command -v nvim)" ]]; then
-    alias vim="nvim"
-else
-    alias nvim="vim"
+if [[ -x "$(command -v nvim)" ]]
+then alias vim="nvim"
+else alias nvim="vim"
 fi
+
+[[ "$_IS_MACOS" = false ]] || alias cp="cp -c" # use macOS APFS cloning by default
+
 alias python="python3"
-alias cp="cp -c" # use macOS APFS cloning by default
+
 alias tetris="autoload -Uz tetriscurses && tetriscurses"
 
-# On macOS, alias reboot to use AppleScript to send System Events to be graceful to GUI apps
-reboot() {
-    osascript -e 'tell application "System Events" to restart' && \
-        echo "Restart has been scheduled and is underway." && \
-        echo "You will be logged out shortly."
-}
+if [[ "$_IS_MACOS" = true ]]; then
+    # On macOS, alias reboot to use AppleScript to send System Events to be graceful to GUI apps
+    reboot() {
+        echo "This will gracefully close all applications and log you out."
+        echo
+        echo "Cancel with Ctrl-C in 3s if not intended."
+        echo "Use sudo to force an immediate reboot."
+        echo
+        sleep 3
+        echo
+        osascript -e 'tell application "System Events" to restart' && \
+            echo "Restart has been scheduled and is underway." && \
+            echo "You will be logged out shortly."
+    }
+fi
 
 
 # VM helpers
@@ -569,6 +577,7 @@ else
 fi
 unset __conda_setup
 # <<< conda initialize <<<
+
 }
 
 gnuify() {
