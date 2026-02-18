@@ -7,7 +7,7 @@ else
 fi
 
 # rust cargo
-. "$HOME/.cargo/env"
+[ ! -f "$HOME/.cargo/env" ] || . "$HOME/.cargo/env"
 
 # golang
 export PATH="$HOME/go/bin:$PATH"
@@ -25,6 +25,13 @@ if [ -d "$HOME/bin" ]; then
   export PATH="$HOME/bin:$PATH"
 fi
 
-# completions
-fpath=(/opt/homebrew/share/zsh/site-functions /usr/local/share/zsh/site-functions $fpath)
-
+if [ ! -d "$HOME"/Library/Caches/dotcache ]; then
+  if [ -d "$HOME"/.cache ]; then
+    mv "$HOME"/.cache "$HOME"/Library/Caches/dotcache
+  else
+    mkdir -p "$HOME"/Library/Caches/dotcache
+  fi
+  if [ ! -L "$HOME"/.cache ]; then
+    ln -s "$HOME"/Library/Caches/dotcache "$HOME"/.cache
+  fi
+fi

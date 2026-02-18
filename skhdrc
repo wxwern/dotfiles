@@ -1,6 +1,6 @@
-:: default : terminal-notifier -title "skhd active" -message "all keybindings mapped to yabai wm" -ignoreDnD
-:: passthrough : terminal-notifier -title "skhd inactive" -message "all keybindings passed to foreground app" -ignoreDnD
-:: noscripting : terminal-notifier -title "skhd partially active" -message "all keybindings, excluding scripting addition, mapped to yabai wm" -ignoreDnD
+:: default : terminal-notifier -title "skhd active" -message "all keybindings mapped to yabai wm" -group STATUS -ignoreDnD
+:: passthrough : terminal-notifier -title "skhd inactive" -message "all keybindings passed to foreground app" -group STATUS -ignoreDnD
+:: noscripting : terminal-notifier -title "skhd partially active" -message "all keybindings, excluding scripting addition, mapped to yabai wm" -group STATUS -ignoreDnD
 
 ctrl + alt + cmd + shift - x ; passthrough
 passthrough < ctrl + alt + cmd + shift - x ; default
@@ -12,11 +12,10 @@ noscripting < ctrl + alt + cmd + shift - s ; default
 #
 
 default, noscripting < ctrl + alt + cmd - r : \
-    terminal-notifier -title "Reloading Desktop Environment" -message "~ yabai, skhd, Übersicht, Finder." -ignoreDnD; \
+    terminal-notifier -title "Reloading Desktop Environment" -message "~ yabai, skhd, Übersicht, Finder." -group STATUS -ignoreDnD; \
     killall Finder; \
     kill -9 $(pgrep bersicht); \
     killall Dock; \
-    brew services restart borders; \
     sleep 3; \
     yabai --restart-service; \
     skhd -r; \
@@ -24,8 +23,14 @@ default, noscripting < ctrl + alt + cmd - r : \
     open /Applications/Übersicht.app; \
     osascript -e 'tell application id 'tracesof.Uebersicht' to activate';
 
+default, noscripting < ctrl + alt + cmd - u : \
+    kill -9 $(pgrep bersicht); \
+    open /Applications/Übersicht.app; \
+    osascript -e 'tell application id 'tracesof.Uebersicht' to activate';
+
+
 default < shift + ctrl + alt + cmd - r : \
-    terminal-notifier -title "Reloading yabai spaces data..." -message "Cycling through all spaces to load windows into yabai..." -ignoreDnD; \
+    terminal-notifier -title "Reloading yabai spaces data..." -message "Cycling through all spaces to load windows into yabai..." -group STATUS -ignoreDnD; \
 	CURR_SPACE_YABAI="$(yabai -m query --spaces --space | jq ".index")"; \
     VISIBLE_SPACES_YABAI="$(yabai -m query --spaces | jq '.[] | select(."is-visible") | .index')"; \
 	CURR_SPACE_YABAI_COUNT="$(yabai -m query --spaces | jq length)"; \
@@ -39,10 +44,10 @@ default < shift + ctrl + alt + cmd - r : \
         yabai -m space --focus "$line"; \
     done <<< "$VISIBLE_SPACES_YABAI"; \
 	yabai -m space --focus "$CURR_SPACE_YABAI"; \
-    terminal-notifier -title "yabai space reload complete" -message "All space windows have been loaded into yabai." -ignoreDnD;
+    terminal-notifier -title "yabai space reload complete" -message "All space windows have been loaded into yabai." -group STATUS -ignoreDnD;
 
 noscripting < shift + ctrl + alt + cmd - r : \
-    terminal-notifier -title "Cannot reload yabai spaces data!" -message "Scripting addition mode is disabled." -ignoreDnD;
+    terminal-notifier -title "Cannot reload yabai spaces data!" -message "Scripting addition mode is disabled." -group STATUS -ignoreDnD;
 
 # quick access scripts
 default, noscripting < ctrl + alt + cmd - h: ~/Scripts/join_discord_home.sh
@@ -50,30 +55,30 @@ default, noscripting < ctrl + alt + cmd - e: ~/Scripts/undock.sh
 default, noscripting < ctrl + alt + cmd - 0x2A: ~/Scripts/toggle_display_scaling.sh
 default, noscripting < ctrl + alt + cmd - m: \
     killall MonitorControl; open /Applications/MonitorControl.app/; \
-    terminal-notifier -title "MonitorControl Restarted" -message "MonitorControl.app is restarted." -ignoreDnD;
+    terminal-notifier -title "MonitorControl Restarted" -message "MonitorControl.app is restarted." -group STATUS -ignoreDnD;
 default, noscripting < ctrl + alt + cmd - t: \
     if [[ "$(pmset -g batt | grep 'AC Power')" ]]; then \
         if [[ "$(pmset -g | grep 'lowpowermode' | tail -c 2)" == "0" ]]; then \
             sudo pmset -c lowpowermode 1 && \
-            terminal-notifier -title "Wired Low Power Mode: ON" -message "Low Power Mode Toggled." -ignoreDnD; \
+            terminal-notifier -title "Wired Low Power Mode: ON" -message "Low Power Mode Toggled." -group STATUS -ignoreDnD; \
         else \
             sudo pmset -c lowpowermode 0 && \
-            terminal-notifier -title "Wired Low Power Mode: OFF" -message "Low Power Mode Toggled." -ignoreDnD; \
+            terminal-notifier -title "Wired Low Power Mode: OFF" -message "Low Power Mode Toggled." -group STATUS -ignoreDnD; \
         fi; \
     else \
         if [[ "$(pmset -g | grep 'lowpowermode' | tail -c 2)" == "0" ]]; then \
             sudo pmset -b lowpowermode 1 && \
-            terminal-notifier -title "Battery Low Power Mode: ON" -message "Low Power Mode Toggled." -ignoreDnD; \
+            terminal-notifier -title "Battery Low Power Mode: ON" -message "Low Power Mode Toggled." -group STATUS -ignoreDnD; \
         else \
             sudo pmset -b lowpowermode 0 && \
-            terminal-notifier -title "Battery Low Power Mode: OFF" -message "Low Power Mode Toggled." -ignoreDnD; \
+            terminal-notifier -title "Battery Low Power Mode: OFF" -message "Low Power Mode Toggled." -group STATUS -ignoreDnD; \
         fi; \
     fi; \
     osascript -e "tell application id \"tracesof.uebersicht\" to refresh widget id \"clarity-status-jsx\"";
 
 # launch handoff app with alt tab (graceful return if none)
 default, noscripting < alt - 0x30: \
-    terminal-notifier -title "Handoff" -message "Launching task via handoff (if possible)..." -ignoreDnD; \
+    terminal-notifier -title "Handoff" -message "Launching task via handoff (if possible)..." -group STATUS -ignoreDnD; \
     osascript -e "tell application \"System Events\"" \
     -e "key up option" \
     -e "key up tab" \
@@ -90,23 +95,23 @@ default, noscripting < alt - 0x30: \
 default, noscripting < ctrl + alt + cmd - f : \
     if [[ "$(yabai -m query --spaces --space | jq -r '.type')" == "float" ]]; then \
         yabai -m space --layout bsp; \
-        terminal-notifier -title "yabai layout for current space toggled" -subtitle "currently: bsp" -ignoreDnD; \
+        terminal-notifier -title "yabai layout for current space toggled" -subtitle "currently: bsp" -group STATUS -ignoreDnD; \
         osascript -e 'tell application id "tracesof.Uebersicht" to refresh widget id "clarity-bar-jsx"'; \
     else \
         yabai -m space --layout float; \
         while IFS= read -r id; do yabai -m window $id --layer normal; done <<< "$(yabai -m query --windows --space | jq '.[] | select(.layer=="below") | .id')"; \
-        terminal-notifier -title "yabai layout for current space toggled" -subtitle "currently: float" -ignoreDnD; \
+        terminal-notifier -title "yabai layout for current space toggled" -subtitle "currently: float" -group STATUS -ignoreDnD; \
         osascript -e 'tell application id "tracesof.Uebersicht" to refresh widget id "clarity-bar-jsx"'; \
     fi;
 
 default, noscripting < ctrl + alt + cmd - s : \
     if [[ "$(yabai -m query --spaces --space | jq -r '.type')" == "stack" ]]; then \
         yabai -m space --layout bsp; \
-        terminal-notifier -title "yabai layout for current space toggled" -subtitle "currently: bsp" -ignoreDnD; \
+        terminal-notifier -title "yabai layout for current space toggled" -subtitle "currently: bsp" -group STATUS -ignoreDnD; \
         osascript -e 'tell application id "tracesof.Uebersicht" to refresh widget id "clarity-bar-jsx"'; \
     else \
         yabai -m space --layout stack; \
-        terminal-notifier -title "yabai layout for current space toggled" -subtitle "currently: stack" -ignoreDnD; \
+        terminal-notifier -title "yabai layout for current space toggled" -subtitle "currently: stack" -group STATUS -ignoreDnD; \
         osascript -e 'tell application id "tracesof.Uebersicht" to refresh widget id "clarity-bar-jsx"'; \
     fi;
 
@@ -124,12 +129,12 @@ default, noscripting < shift + ctrl + cmd - f : \
         yabai -m window \
             --toggle sticky \
             --grid 5:5:2:2:2:2; \
-        terminal-notifier -title "Sticky Window: Off" -subtitle "Window is no longer sticky." -ignoreDnD; \
+        terminal-notifier -title "Sticky Window: Off" -subtitle "Window is no longer sticky." -group STATUS -ignoreDnD; \
     else \
         yabai -m window \
             --toggle sticky \
             --grid 4:4:3:0:1:1; \
-        terminal-notifier -title "Sticky Window: On" -subtitle "Window is now sticky." -ignoreDnD; \
+        terminal-notifier -title "Sticky Window: On" -subtitle "Window is now sticky." -group STATUS -ignoreDnD; \
     fi; \
 
 #
@@ -137,10 +142,10 @@ default, noscripting < shift + ctrl + cmd - f : \
 #
 
 # focus window
-default, noscripting < ctrl + alt - up    : yabai -m window --focus north || yabai -m display --focus north
-default, noscripting < ctrl + alt - down  : yabai -m window --focus south || yabai -m display --focus south
-default, noscripting < ctrl + alt - left  : yabai -m window --focus west  || yabai -m space --focus prev || yabai -m display --focus west || skhd -k "shift + ctrl + alt + cmd - left"
-default, noscripting < ctrl + alt - right : yabai -m window --focus east  || yabai -m space --focus next || yabai -m display --focus east || skhd -k "shift + ctrl + alt + cmd - right"
+default, noscripting < ctrl + alt - up    : ~/bin/spatial-yabai --north --focus || yabai -m window --focus north || yabai -m display --focus north
+default, noscripting < ctrl + alt - down  : ~/bin/spatial-yabai --south --focus || yabai -m window --focus south || yabai -m display --focus south
+default, noscripting < ctrl + alt - left  : ~/bin/spatial-yabai --west --focus || yabai -m window --focus west  || yabai -m space --focus prev || yabai -m display --focus west || skhd -k "shift + ctrl + alt + cmd - left"
+default, noscripting < ctrl + alt - right : ~/bin/spatial-yabai --east --focus || yabai -m window --focus east  || yabai -m space --focus next || yabai -m display --focus east || skhd -k "shift + ctrl + alt + cmd - right"
 
 # toggle focus between floating and non-floating windows
 default, noscripting < ctrl + alt - z : \
@@ -172,28 +177,28 @@ default, noscripting < ctrl + alt + cmd - up   : \
     ( \
         ((yabai -m window north --focus stack.last && yabai -m window --focus south) || true) && \
         yabai -m window north --stack "$(yabai -m query --windows --window | jq '.id')" && \
-        terminal-notifier -title "Window stacked!" -subtitle "Window stacked onto window above." -ignoreDnD \
+        terminal-notifier -title "Window stacked!" -subtitle "Window stacked onto window above." -group STATUS -ignoreDnD \
     );
 default, noscripting < ctrl + alt + cmd - down : \
     (yabai -m query --windows --window | jq '."stack-index" >= 1' && yabai -m window --focus stack.prev) || \
     ( \
         ((yabai -m window south --focus stack.last && yabai -m window --focus north) || true) && \
         yabai -m window south --stack "$(yabai -m query --windows --window | jq '.id')" && \
-        terminal-notifier -title "Window stacked!" -subtitle "Window stacked onto window below." -ignoreDnD \
+        terminal-notifier -title "Window stacked!" -subtitle "Window stacked onto window below." -group STATUS -ignoreDnD \
     );
 default, noscripting < ctrl + alt + cmd - left  : ( \
         ((yabai -m window west --focus stack.last && yabai -m window --focus east) || true) && \
         yabai -m window west --stack "$(yabai -m query --windows --window | jq '.id')" && \
-        terminal-notifier -title "Window stacked!" -subtitle "Window stacked onto left window." -ignoreDnD \
+        terminal-notifier -title "Window stacked!" -subtitle "Window stacked onto left window." -group STATUS -ignoreDnD \
     );
 default, noscripting < ctrl + alt + cmd - right : ( \
         ((yabai -m window east --focus stack.last && yabai -m window --focus west) || true) && \
         yabai -m window east --stack "$(yabai -m query --windows --window | jq '.id')" && \
-        terminal-notifier -title "Window stacked!" -subtitle "Window stacked onto right window." -ignoreDnD \
+        terminal-notifier -title "Window stacked!" -subtitle "Window stacked onto right window." -group STATUS -ignoreDnD \
     );
 default, noscripting < ctrl + alt + cmd - z : ( \
         yabai -m window --toggle float --toggle float; \
-        terminal-notifier -title "Window detached!" -subtitle "Window detached from existing state." -ignoreDnD \
+        terminal-notifier -title "Window detached!" -subtitle "Window detached from existing state." -group STATUS -ignoreDnD \
     );
 
 # swap windows within stack
@@ -230,7 +235,7 @@ default, noscripting < ctrl + cmd - f :
     WIN_QUERY="$(yabai -m query --windows --window)"; \
     if printf "$WIN_QUERY" | jq -e '.["is-sticky"]'; then \
         yabai -m window --toggle sticky --toggle float; \
-        terminal-notifier -title "Sticky Window: Off" -subtitle "Window is no longer sticky as it is no longer floating." -ignoreDnD; \
+        terminal-notifier -title "Sticky Window: Off" -subtitle "Window is no longer sticky as it is no longer floating." -group STATUS -ignoreDnD; \
     else \
         if printf "$WIN_QUERY" | jq -e '.["is-floating"]'; then \
             yabai -m window --toggle float; \
@@ -294,7 +299,7 @@ default, noscripting < ctrl + alt - g : yabai -m window --grid 1:3:2:0:1:1 #1/3 
 default, noscripting < ctrl + alt - t : yabai -m window --grid 1:3:1:0:2:1 #2/3 right
 
 # maximize floating or tiled window
-default, noscripting < ctrl + alt - m : yabai -m window --grid 1:1:0:0:1:1 || yabai -m window --toggle zoom-fullscreen #maximize
+default, noscripting < ctrl + alt - m : yabai -m window --grid 1:1:0:0:1:1 || yabai -m window --toggle zoom-fullscreen
 
 # override macos sequoia tiling shortcuts
 default, noscripting < fn + ctrl - 0x73: true; # left (home)
@@ -355,26 +360,26 @@ alt + ctrl - 9 : yabai -m space --focus 19
 alt + ctrl - 0 : yabai -m space --focus 20
 
 # move window to space
-default, noscripting < shift + ctrl - 1 : yabai -m window --space  1 --focus
-default, noscripting < shift + ctrl - 2 : yabai -m window --space  2 --focus
-default, noscripting < shift + ctrl - 3 : yabai -m window --space  3 --focus
-default, noscripting < shift + ctrl - 4 : yabai -m window --space  4 --focus
-default, noscripting < shift + ctrl - 5 : yabai -m window --space  5 --focus
-default, noscripting < shift + ctrl - 6 : yabai -m window --space  6 --focus
-default, noscripting < shift + ctrl - 7 : yabai -m window --space  7 --focus
-default, noscripting < shift + ctrl - 8 : yabai -m window --space  8 --focus
-default, noscripting < shift + ctrl - 9 : yabai -m window --space  9 --focus
-default, noscripting < shift + ctrl - 0 : yabai -m window --space 10 --focus
-default, noscripting < shift + alt + ctrl - 1 : yabai -m window --space 11 --focus
-default, noscripting < shift + alt + ctrl - 2 : yabai -m window --space 12 --focus
-default, noscripting < shift + alt + ctrl - 3 : yabai -m window --space 13 --focus
-default, noscripting < shift + alt + ctrl - 4 : yabai -m window --space 14 --focus
-default, noscripting < shift + alt + ctrl - 5 : yabai -m window --space 15 --focus
-default, noscripting < shift + alt + ctrl - 6 : yabai -m window --space 16 --focus
-default, noscripting < shift + alt + ctrl - 7 : yabai -m window --space 17 --focus
-default, noscripting < shift + alt + ctrl - 8 : yabai -m window --space 18 --focus
-default, noscripting < shift + alt + ctrl - 9 : yabai -m window --space 19 --focus
-default, noscripting < shift + alt + ctrl - 0 : yabai -m window --space 20 --focus
+default, noscripting < shift + ctrl - 1 : yabai -m window --space  1 --focus && sleep 0.5 && yabai -m space --focus 1
+default, noscripting < shift + ctrl - 2 : yabai -m window --space  2 --focus && sleep 0.5 && yabai -m space --focus 2
+default, noscripting < shift + ctrl - 3 : yabai -m window --space  3 --focus && sleep 0.5 && yabai -m space --focus 3
+default, noscripting < shift + ctrl - 4 : yabai -m window --space  4 --focus && sleep 0.5 && yabai -m space --focus 4
+default, noscripting < shift + ctrl - 5 : yabai -m window --space  5 --focus && sleep 0.5 && yabai -m space --focus 5
+default, noscripting < shift + ctrl - 6 : yabai -m window --space  6 --focus && sleep 0.5 && yabai -m space --focus 6
+default, noscripting < shift + ctrl - 7 : yabai -m window --space  7 --focus && sleep 0.5 && yabai -m space --focus 7
+default, noscripting < shift + ctrl - 8 : yabai -m window --space  8 --focus && sleep 0.5 && yabai -m space --focus 8
+default, noscripting < shift + ctrl - 9 : yabai -m window --space  9 --focus && sleep 0.5 && yabai -m space --focus 9
+default, noscripting < shift + ctrl - 0 : yabai -m window --space 10 --focus && sleep 0.5 && yabai -m space --focus 10
+default, noscripting < shift + alt + ctrl - 1 : yabai -m window --space 11 --focus && sleep 0.5 && yabai -m space --focus 11
+default, noscripting < shift + alt + ctrl - 2 : yabai -m window --space 12 --focus && sleep 0.5 && yabai -m space --focus 12
+default, noscripting < shift + alt + ctrl - 3 : yabai -m window --space 13 --focus && sleep 0.5 && yabai -m space --focus 13
+default, noscripting < shift + alt + ctrl - 4 : yabai -m window --space 14 --focus && sleep 0.5 && yabai -m space --focus 14
+default, noscripting < shift + alt + ctrl - 5 : yabai -m window --space 15 --focus && sleep 0.5 && yabai -m space --focus 15
+default, noscripting < shift + alt + ctrl - 6 : yabai -m window --space 16 --focus && sleep 0.5 && yabai -m space --focus 16
+default, noscripting < shift + alt + ctrl - 7 : yabai -m window --space 17 --focus && sleep 0.5 && yabai -m space --focus 17
+default, noscripting < shift + alt + ctrl - 8 : yabai -m window --space 18 --focus && sleep 0.5 && yabai -m space --focus 18
+default, noscripting < shift + alt + ctrl - 9 : yabai -m window --space 19 --focus && sleep 0.5 && yabai -m space --focus 19
+default, noscripting < shift + alt + ctrl - 0 : yabai -m window --space 20 --focus && sleep 0.5 && yabai -m space --focus 20
 
 default, noscripting < shift + alt + ctrl - left : \
     ANIM_DUR=$(yabai -m config window_animation_duration); \
@@ -382,7 +387,7 @@ default, noscripting < shift + alt + ctrl - left : \
         yabai -m config window_animation_duration 0.0; \
     fi; \
     WIN_ID="$(yabai -m query --windows --window | jq '.id')"; \
-    yabai -m window --space prev --focus "$WIN_ID"; \
+    yabai -m window --space prev --focus "$WIN_ID" || yabai -m window --display west --focus "$WIN_ID"; \
     if (( "$ANIM_DUR" > 0 )); then \
         yabai -m config window_animation_duration "$ANIM_DUR"; \
     fi;
@@ -393,7 +398,7 @@ default, noscripting < shift + alt + ctrl - right : \
         yabai -m config window_animation_duration 0.0; \
     fi; \
     WIN_ID="$(yabai -m query --windows --window | jq '.id')"; \
-    yabai -m window --space next --focus "$WIN_ID"; \
+    yabai -m window --space next --focus "$WIN_ID" || yabai -m window --display east --focus "$WIN_ID"; \
     if (( "$ANIM_DUR" > 0 )); then \
         yabai -m config window_animation_duration "$ANIM_DUR"; \
     fi;
@@ -401,7 +406,7 @@ default, noscripting < shift + alt + ctrl - right : \
 # create a new space
 alt + ctrl - 0x18 : \
     yabai -m space --create || \
-    (terminal-notifier -title "Can't Create Space" -subtitle "yabai scripting-addition failed." -ignoreDnD && \
+    (terminal-notifier -title "Can't Create Space" -subtitle "yabai scripting-addition failed." -group STATUS -ignoreDnD && \
     osascript -e "$(printf "beep\ndelay 1")"); \
     osascript -e "tell application id \"tracesof.uebersicht\" to refresh widget id \"clarity-spaces-jsx\"";
 
@@ -413,7 +418,7 @@ alt + ctrl - 0x1B : \
     )"; \
     ([ "$(yabai -m query --windows --space | jq length)" = "0" ] || osascript -e 'tell application "System Events" to display dialog "Delete Current Space?" buttons {"Cancel", "Delete"} default button "Delete" with icon caution') && \
     (yabai -m space --destroy || ( \
-        terminal-notifier -title "Can't Delete Space" -subtitle "Either this is the only space left on this display, or yabai scripting-addition failed." -ignoreDnD && \
+        terminal-notifier -title "Can't Delete Space" -subtitle "Either this is the only space left on this display, or yabai scripting-addition failed." -group STATUS -ignoreDnD && \
         osascript -e "$(printf "beep\ndelay 1")" \
     )) && yabai -m space --focus $NEXT_SPACE_TO_FOCUS; \
     osascript -e "tell application id \"tracesof.uebersicht\" to refresh widget id \"clarity-spaces-jsx\"";
@@ -424,17 +429,17 @@ alt + ctrl - 0x1B : \
 default, noscripting < ctrl + alt + cmd - 1 : yabai -m display --focus 1
 default, noscripting < ctrl + alt + cmd - 2 : yabai -m display --focus 2
 default, noscripting < ctrl + alt + cmd - 3 : yabai -m display --focus 3
-default, noscripting < ctrl + alt - 0x2B : yabai -m display --focus west
-default, noscripting < ctrl + alt - 0x2F : yabai -m display --focus east
+default, noscripting < ctrl + alt - 0x2B : yabai -m display --focus west || yabai -m display --focus north
+default, noscripting < ctrl + alt - 0x2F : yabai -m display --focus east || yabai -m display --focus south
 
 # move window in display direction
 default, noscripting < shift + alt + ctrl - 0x2B : \
     WIN_ID="$(yabai -m query --windows --window | jq '.id')"; \
-    yabai -m window --display west --focus "$WIN_ID";
+    yabai -m window --display west --focus "$WIN_ID" || yabai -m window --display north --focus "$WIN_ID";
 
 default, noscripting < shift + alt + ctrl - 0x2F : \
     WIN_ID="$(yabai -m query --windows --window | jq '.id')"; \
-    yabai -m window --display east --focus "$WIN_ID";
+    yabai -m window --display east --focus "$WIN_ID" || yabai -m window --display south --focus "$WIN_ID";
 
 default, noscripting < shift + alt + ctrl - up : \
     WIN_ID="$(yabai -m query --windows --window | jq '.id')"; \

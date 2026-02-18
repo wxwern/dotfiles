@@ -24,6 +24,8 @@ defaults write com.apple.dock launchanim -bool false     # true as default
 # Show app switcher on all displays
 echo "Displaying CMD-Tab app switcher on all displays..."
 defaults write com.apple.dock appswitcher-all-displays -bool true
+# Switch to undocumented suck effect
+defaults write com.apple.dock mineffect -string suck;
 # Restart Dock
 killall Dock
 # ---

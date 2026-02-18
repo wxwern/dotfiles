@@ -27,10 +27,18 @@ yabai -m config \
 # configure clarity updates
 echo "configuring clarity signals"
 
-# reformat to multiple lines
-REL_SPACES_IND="osascript -e 'if application id \"tracesof.Uebersicht\" is running then' -e 'tell application id \"tracesof.Uebersicht\"' -e 'refresh widget id \"clarity-spaces-jsx\"' -e 'end tell' -e 'end if'"
-REL_BAR_IND="osascript -e 'if application id \"tracesof.Uebersicht\" is running then' -e 'tell application id \"tracesof.Uebersicht\"' -e 'refresh widget id \"clarity-bar-jsx\"' -e 'end tell' -e 'end if'"
-REL_STATUS_IND="osascript -e 'if application id \"tracesof.Uebersicht\" is running then' -e 'tell application id \"tracesof.Uebersicht\"' -e 'refresh widget id \"clarity-status-jsx\"' -e 'end tell' -e 'end if'"
+# clarity config updates
+# if websocat is available, use it to send a message to clarity
+REL_SPACES_IND="osascript -e 'tell application id \"tracesof.Uebersicht\" to refresh widget id \"clarity-spaces-jsx\"'"
+REL_BAR_IND="osascript -e 'tell application id \"tracesof.Uebersicht\" to refresh widget id \"clarity-bar-jsx\"'"
+REL_STATUS_IND="osascript -e 'tell application id \"tracesof.Uebersicht\" to refresh widget id \"clarity-status-jsx\"'"
+
+#if [[ -x "$(command -v websocat)" ]]; then
+#    _BASE_IND="echo '{\"kind\":\"yabai-event\"}' | websocat ws://localhost:19753 >> /dev/null"
+#    REL_SPACES_IND="$_BASE_IND"
+#    REL_BAR_IND="$_BASE_IND"
+#    REL_STATUS_IND="$_BASE_IND"
+#fi
 
 # - if space indicators are enabled
 yabai -m signal --add event=space_changed   action="$REL_SPACES_IND"
@@ -39,25 +47,34 @@ yabai -m signal --add event=space_destroyed action="$REL_SPACES_IND"
 yabai -m signal --add event=display_changed action="$REL_SPACES_IND"
 yabai -m signal --add event=system_woke     action="$REL_SPACES_IND"
 yabai -m signal --add event=mission_control_exit action="$REL_SPACES_IND"
+
 # - if app icon indicators within space indicators are enabled
 yabai -m signal --add event=window_created   action="$REL_SPACES_IND"
 yabai -m signal --add event=window_moved     action="$REL_SPACES_IND"
+yabai -m signal --add event=window_focused   action="$REL_SPACES_IND"
 yabai -m signal --add event=window_resized   action="$REL_SPACES_IND"
 yabai -m signal --add event=window_destroyed action="$REL_SPACES_IND"
 yabai -m signal --add event=window_minimized   action="$REL_SPACES_IND"
 yabai -m signal --add event=window_deminimized action="$REL_SPACES_IND"
-yabai -m signal --add event=application_hidden action="$REL_SPACES_IND"
+yabai -m signal --add event=application_hidden  action="$REL_SPACES_IND"
 yabai -m signal --add event=application_visible action="$REL_SPACES_IND"
-yabai -m signal --add event=application_launched action="$REL_SPACES_IND"
+yabai -m signal --add event=application_launched   action="$REL_SPACES_IND"
 yabai -m signal --add event=application_terminated action="$REL_SPACES_IND"
+yabai -m signal --add event=application_front_switched action="$REL_SPACES_IND"
 
 # - if center space indicators are enabled
 yabai -m signal --add event=space_created    action="$REL_BAR_IND"
 yabai -m signal --add event=space_changed    action="$REL_BAR_IND"
-yabai -m signal --add event=space_destroyed    action="$REL_BAR_IND"
+yabai -m signal --add event=space_destroyed  action="$REL_BAR_IND"
 yabai -m signal --add event=display_changed  action="$REL_BAR_IND"
 yabai -m signal --add event=system_woke      action="$REL_BAR_IND"
 yabai -m signal --add event=mission_control_exit action="$REL_BAR_IND"
+
+# - if window titles or app names are enabled
+yabai -m signal --add event=window_focused              action="$REL_BAR_IND"
+yabai -m signal --add event=window_title_changed        action="$REL_BAR_IND"
+yabai -m signal --add event=application_front_switched  action="$REL_BAR_IND"
+
 # - if wallpaper blur is enabled
 yabai -m signal --add event=window_created   action="$REL_BAR_IND"
 yabai -m signal --add event=window_moved     action="$REL_BAR_IND"
@@ -89,10 +106,51 @@ yabai -m signal --add event=window_focused action='
     if [[ $(yabai -m query --windows --window | jq ".\"is-floating\"") == "false" ]]; then
         win_id=$(yabai -m query --windows --space | jq "map(select(.\"has-fullscreen-zoom\" and (.\"has-focus\" | not)))[0].id")
         if [[ $win_id != "null" ]]; then
+            echo "change focused window to a non-zoomed video - to auto unzoom";
             yabai -m window $win_id --toggle zoom-fullscreen;
+
+            # ensure that the zoomed window is no longer layer above
+            yabai -m window $win_id --sub-layer auto;
         fi
     fi
 '
+
+# - auto set layer to auto for standard windows and to the top for has-fullscreen-zoom or floating or sticky windows
+FIX_WINDOW_LAYERING='
+    WINDOW_DATA=$(yabai -m query --windows --window $YABAI_WINDOW_ID);
+
+    if (printf "$WINDOW_DATA" | jq -er "(.\"has-fullscreen-zoom\" or .\"is-floating\" or .\"is-sticky\")"); then
+        if (printf "$WINDOW_DATA" | jq -er "(.\"sub-layer\" != \"above\")"); then
+            echo "set layer to above for floating or sticky window";
+            yabai -m window $YABAI_WINDOW_ID --sub-layer above;
+        fi
+    elif (printf "$WINDOW_DATA" | jq -er "( .\"sub-layer\" == \"above\" or .\"sub-layer\" == \"normal\" )"); then
+        echo "set layer to normal for non-fullscreen-zoomed window";
+        yabai -m window $YABAI_WINDOW_ID --sub-layer auto;
+    fi
+'
+yabai -m signal --add event=window_resized action="$FIX_WINDOW_LAYERING"
+yabai -m signal --add event=window_focused action="$FIX_WINDOW_LAYERING"
+
+# - auto focus some visible window on a space if none are when:
+#    - switching to a space
+#    - a window is destroyed
+AUTO_FOCUS_SOME_WINDOW_ON_SPACE='
+    echo auto focus some window on space;
+    sleep 0.1;
+    space_number=$(yabai -m query --spaces --space | jq ".index");
+    windows_for_space=$(yabai -m query --windows --space $space_number);
+    win_id=$(echo "$windows_for_space" | jq "map(select(.\"has-focus\" and .\"is-visible\"))[0].id");
+    if [[ "$win_id" == "null" ]]; then
+        win_id=$(echo "$windows_for_space" | jq "map(select(.\"is-visible\"))[0].id");
+        if [[ "$win_id" != "null" ]]; then
+            yabai -m window --focus $win_id;
+        fi
+    fi
+'
+
+yabai -m signal --add event=space_changed action="echo space changed; $AUTO_FOCUS_SOME_WINDOW_ON_SPACE"
+yabai -m signal --add event=window_destroyed action="echo window destroyed; $AUTO_FOCUS_SOME_WINDOW_ON_SPACE"
 
 # - float if window is not resizable
 # - and automatically use padded center for floating windows
@@ -102,9 +160,9 @@ CHECK_IS_FLOATING='printf "$WINDOW_DATA" | jq -er ".\"is-floating\""'
 CHECK_IS_NOT_EXCLUDED_ROLE='printf "$WINDOW_DATA" | jq -r ".role" | grep -vE "'"$EXCLUDE_CENTER_ROLES_REGEX"'"'
 CHECK_IS_NOT_EXCLUDED_SUBROLE='printf "$WINDOW_DATA" | jq -r ".subrole" | grep -vE "'"$EXCLUDE_CENTER_ROLES_REGEX"'"'
 CENTER_AND_FLOAT_WINDOW='(
-    echo "centering and floating window $YABAI_WINDOW_ID with data=$WINDOW_DATA";
     DISPLAY_DATA=$(yabai -m query --displays --display);
     WINDOW_DATA=$(yabai -m query --windows --window $YABAI_WINDOW_ID);
+    echo "centering and floating window $YABAI_WINDOW_ID with data=$WINDOW_DATA";
 
     if (printf "$WINDOW_DATA" | jq -er ".\"is-floating\" == false"); then
         yabai -m window $YABAI_WINDOW_ID --toggle float;
@@ -122,30 +180,49 @@ CENTER_AND_FLOAT_WINDOW='(
     pos_y="$(printf "[$DISPLAY_DATA, $WINDOW_DATA]" | jq ".[0].frame.h/2 - .[1].frame.h/2 + .[0].frame.y")";
     yabai -m window $YABAI_WINDOW_ID --move abs:$pos_x:$pos_y;
 )'
-yabai -m signal --add event=window_created action="$QUERY_WINDOW_DATA; ($CHECK_IS_FLOATING || $CHECK_UNFLOATED_UNRESIZABLE) && ($CHECK_IS_NOT_EXCLUDED_ROLE && $CHECK_IS_NOT_EXCLUDED_SUBROLE) && $CENTER_AND_FLOAT_WINDOW"
+
+yabai -m signal --add event=window_created action="echo window created; $QUERY_WINDOW_DATA; ($CHECK_IS_FLOATING || $CHECK_UNFLOATED_UNRESIZABLE) && ($CHECK_IS_NOT_EXCLUDED_ROLE && $CHECK_IS_NOT_EXCLUDED_SUBROLE) && $CENTER_AND_FLOAT_WINDOW"
 
 # - float Finder Info windows (title = "*Info" width <= 400, standard Finder Info window width are always larger than 400), then center it
 CHECK_WIDTH_MAX_400='(printf "$WINDOW_DATA" | jq -er ".frame.w <= 400")'
 SET_SUBLAYER_ABOVE='yabai -m window $YABAI_WINDOW_ID --sub-layer above'
-yabai -m signal --add event=window_created app="^Finder$" title="^.*Info$" action="$QUERY_WINDOW_DATA; ($CHECK_WIDTH_MAX_400 && $FLOAT_WINDOW && $SET_SUBLAYER_ABOVE)"
-
-# - focus some window on space if destroyed
-FOCUS_ON_DESTORY='sleep 0.5 && (yabai -m query --windows --window || (yabai -m query --spaces --space | jq ".\"first-window\"" | xargs -I {} yabai -m window --focus {} || true))'
-yabai -m signal --add event=window_destroyed action="$FOCUS_ON_DESTORY"
+yabai -m signal --add event=window_created app="^Finder$" title="^.*Info$" action="echo window created; $QUERY_WINDOW_DATA; ($CHECK_WIDTH_MAX_400 && $CENTER_AND_FLOAT_WINDOW && $SET_SUBLAYER_ABOVE)"
 
 # - focus some window of the app if the front app has switched
-yabai -m signal --add event=application_front_switched action='sleep 0.5 && (yabai -m query --windows --window || (yabai -m query --windows --window | jq ".app" | xargs -I {} yabai -m window --focus {} || true))' # TODO: fix
+# TODO: fix
+# yabai -m signal --add event=application_front_switched action='sleep 0.5 && (yabai -m query --windows --window || (yabai -m query --windows --window | jq ".app" | xargs -I {} yabai -m window --focus {} || true))'
 
 # - automatically prevent management when time machine browser (app="Finder", title="Timeline Controls", approx full screen) is open
-CHECK_COND_TM='yabai -m query --windows --window $YABAI_WINDOW_ID | jq -er ".frame.x == 0 and .frame.y == 0 and .frame.w >= 640 and .frame.h >= 640"'
-yabai -m rule --add app="^Finder$" title="^Timeline Controls$" sub-layer=below manage=off
-yabai -m signal --add event=window_created app="^Finder$" title="^Timeline Controls$" action="$CHECK_COND_TM && yabai -m space --layout float" # && brew services stop borders"
+CHECK_COND_TM='yabai -m query --windows --window $YABAI_WINDOW_ID | jq -er ".frame.x == 0 and .frame.y == 0 and .frame.w >= 640 and .frame.h >= 640 and .level == 1000" && echo "found Time Machine full screen window"'
+PROCESS_FOCUSED_TM_WINDOW='(
+    echo "processing TM focused window centering";
+
+    DISPLAY_DATA=$(yabai -m query --displays --display);
+    WINDOW_DATA=$(yabai -m query --windows --window);
+    YABAI_WINDOW_ID=$(printf "$WINDOW_DATA" | jq -r ".id");
+
+    pos_x="$(printf "[$DISPLAY_DATA, $WINDOW_DATA]" | jq ".[0].frame.w/2 - .[1].frame.w/2 + .[0].frame.x")";
+    pos_y="$(printf "[$DISPLAY_DATA, $WINDOW_DATA]" | jq ".[0].frame.h*3/5 - .[1].frame.h/2 + .[0].frame.y")";
+    yabai -m window --move abs:$pos_x:$pos_y;
+)'
+
+yabai -m rule --add app="^Finder$" title="^Timeline Controls$" sub-layer=normal manage=off
+yabai -m signal --add event=window_created app="^Finder$" title="^Timeline Controls$" action="$CHECK_COND_TM && yabai -m space --layout float; $PROCESS_FOCUSED_TM_WINDOW" # && brew services stop borders"
 yabai -m signal --add event=window_title_changed app="^Finder$" title="^Timeline Controls$" action="$CHECK_COND_TM && yabai -m space --layout float" # && brew services stop borders"
-yabai -m signal --add event=window_destroyed app="^Finder$" title="^Timeline Controls$" action="$CHECK_COND_TM && yabai -m space --layout bsp" # && brew services start borders"
+# TODO: fix; it seems that this is run for any finder popup close, not just time machine
+# yabai -m signal --add event=window_destroyed app="^Finder$" title="^Timeline Controls$" action="echo \"Time Machine terminated\" && yabai -m space --layout bsp" # && brew services start borders"
 
 # - if role is AXSheet, then disable borders temporarily
 #yabai -m signal --add event=window_focused action='if [[ $(yabai -m query --windows --window | jq ".role") == "\"AXSheet\"" ]]; then borders active_color=0x00000000; fi';
 #yabai -m signal --add event=window_focused action='if [[ $(yabai -m query --windows --window | jq ".role") != "\"AXSheet\"" ]]; then ~/.config/borders/bordersrc 2>/dev/null 1>&2; fi';
+
+# - for some intensive apps, toggle resolution to perfect integer scaling
+yabai -m signal --add event=application_launched app="^(Genshin Impact|Honkai: Star Rail|Infinity Nikki|Prism Launcher|OBS Studio)$" action='~/Scripts/toggle_display_scaling.sh default'
+yabai -m signal --add event=application_launched app='^(Heroic|CrossOver)$' action='~/Scripts/toggle_display_scaling.sh default-no-notch'
+yabai -m signal --add event=application_terminated app='^(Heroic|CrossOver)$' action='~/Scripts/toggle_display_scaling.sh default'
+
+# - sync true tone to whether a color-accuracy-required app is focused
+yabai -m signal --add event=application_front_switched action='~/Scripts/sync_true_tone.sh'
 
 # - other rules
 EXCLUDE_MANAGE_ROLES_REGEX="(AXMenu|AXSheet|AXDialog|AXPopover|AXSystemDialog|AXFloatingWindow|AXSystemFloatingWindow)"
@@ -160,12 +237,14 @@ yabai -m rule --add app="^Macs Fan Control$" sub-layer=above manage=off
 yabai -m rule --add app="^Stickies$" sub-layer=above manage=off sticky=on
 yabai -m rule --add app="^Microsoft Teams$" title="^Microsoft Teams Notification$" sub-layer=above manage=off
 yabai -m rule --add app="^Final Cut Pro$" title="^Background Tasks$" sub-layer=above manage=off
+yabai -m rule --add app="^BetterDisplay$" sub-layer=above manage=off sticky=on
 
 yabai -m rule --add title="^(Settings|Preferences)$" sub-layer=normal manage=off
 yabai -m rule --add app="^(System Settings|System Preferences)$" sub-layer=normal manage=off
 yabai -m rule --add title="^Problem Report for" sub-layer=normal manage=off
 yabai -m rule --add app="^(Calculator|Calculator Plus)$" sub-layer=normal manage=off
 yabai -m rule --add app="^ChatGPT$" title="^$" sub-layer=normal manage=off
+yabai -m rule --add app="^Music$" title="^(MiniPlayer)?$" sub-layer=normal manage=off
 yabai -m rule --add app="^Safari$" title="^(General|Privacy|Security|Search|Extensions|Websites|Advanced|Develop|Accounts|AutoFill|Notifications|Password|Tabs|Media)$" sub-layer=normal manage=off
 # yabai -m rule --add app="^Parallels Desktop" title="(Settings|Preferences|Configuration|Control Cent(re|er))$" sub-layer=normal manage=off
 yabai -m rule --add app="^Parallels Desktop" sub-layer=normal manage=off
@@ -173,11 +252,14 @@ yabai -m rule --add app="^IntelliJ IDEA$" title="^(Project Structure)$" sub-laye
 yabai -m rule --add app="^IntelliJ IDEA$" title="^(Rename|Move|Copy|Delete|Safe Delete|Change|Format|Reformat|Add).*$" sub-layer=normal manage=off
 yabai -m rule --add app="^FaceTime$" sub-layer=normal manage=off sticky=on
 
+yabai -m rule --add app="^Affinity$" role="AXWindow" subrole="AXStandardWindow" manage=on sub-layer=auto
+
 yabai -m rule --add app="^Xcode$" title="^(Devices|Simulators)$" manage=off
 yabai -m rule --add app="^iStat Menus" manage=off
 yabai -m rule --add app="^Simulator$" manage=off sub-layer=above
 yabai -m rule --add app="^qemu-system-.*" title="^Android Emulator.*" manage=off sub-layer=above
-yabai -m rule --add app="^iPhone Mirroring$" manage=off sub-layer=above
+yabai -m rule --add app="^eqMac$" manage=off sub-layer=above sticky=on
+yabai -m rule --add app="^iPhone Mirroring$" manage=off sub-layer=above sticky=on
 yabai -m rule --add app="^Music$" title="^Mini Player$" manage=off
 yabai -m rule --add app="^Delete Apps$" manage=off
 yabai -m rule --add app="bersicht$" sub-layer=below manage=off
@@ -189,14 +271,28 @@ yabai -m rule --add app="^(QuickTime Player|mpv|IINA)$" manage=off
 yabai -m rule --add app="^(Time Machine)$" manage=off
 yabai -m rule --add app="^(Desk View)$" manage=off
 yabai -m rule --add app="^(Screen Sharing)$" title!="^(All Connections)$" manage=off
+yabai -m rule --add app="^UTM$" title!="^UTM$" manage=off
+yabai -m signal --add event=window_title_changed app="^UTM$" action='
+    WINDOW_DATA=$(yabai -m query --windows --window $YABAI_WINDOW_ID);
+    if (printf "$WINDOW_DATA" | jq -er ".title != \"UTM\""); then
+        '"$CENTER_AND_FLOAT_WINDOW"'
+        sleep 1;
+        '"$CENTER_AND_FLOAT_WINDOW"'
+        sleep 0.25;
+
+        (printf "$WINDOW_DATA" | jq -er ".\"is-native-fullscreen\" == false") &&
+            yabai -m window $YABAI_WINDOW_ID --toggle native-fullscreen;
+    fi
+'
 
 # - for windows that aren't windows
-yabai -m rule --add app!="^(Xcode|Finder|iTerm2|Photos)$" title="^$" sub-layer=normal manage=off
+yabai -m rule --add app!="^(Xcode|Finder|iTerm2|Photos|Weather)$" title="^$" sub-layer=normal manage=off
 
 # - Fullscreen optimized games
 yabai -m rule --add app="^Genshin Impact$" native-fullscreen=on manage=off
 yabai -m rule --add app="^Honkai: Star Rail$" native-fullscreen=on manage=off
 yabai -m rule --add app="^Zenless Zone Zero$" native-fullscreen=on manage=off
+yabai -m rule --add app="^Infinity Nikki$" native-fullscreen=on manage=off
 yabai -m rule --add app="^java$" title="Minecraft.? [0-9\\.]+" native-fullscreen=on manage=off
 
 #layouts
@@ -231,11 +327,11 @@ yabai -m config --space 1 layout stack
 
 # done
 echo "yabai config is now loaded."
-terminal-notifier -title "yabai ready" -message "yabai is fully loaded." -ignoreDnD
+terminal-notifier -title "yabai ready" -message "yabai is fully configured." -group STATUS -ignoreDnD
 
 # refresh ubersicht again now that we are done
 sh -c "$REL_SPACES_IND"
 sh -c "$REL_BAR_IND"
 
-# apply rules to all existing rules
+# apply rules to all existing apps
 yabai -m rule --apply

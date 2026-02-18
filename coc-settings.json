@@ -1,0 +1,114 @@
+{
+    "languageserver": {
+        "efm": {
+            "command": "efm-langserver",
+            "args": [],
+            "filetypes": ["vim", "eruby", "markdown"]
+        },
+        "ocaml-lsp": {
+            // todo: add env OCAMLLSP_SEMANTIC_HIGHLIGHTING=1
+            "command": "opam",
+            "args": ["config", "exec", "--", "ocamllsp"],
+            "filetypes": ["ocaml", "reason"],
+            "initializationOptions": {
+                "extendedHover": {
+                    "enabled": true
+                },
+                "codelens": {
+                    "enabled": true
+                },
+                "inlayHints": {
+                    "enabled": true
+                },
+                "syntaxDocumentation": {
+                    "enabled": true
+                }
+            },
+            "settings": {
+                "extendedHover": {
+                    "enabled": true
+                },
+                "codelens": {
+                    "enabled": true
+                },
+                "inlayHints": {
+                    "enabled": true
+                },
+                "syntaxDocumentation": {
+                    "enabled": true
+                }
+            },
+            "extendedHover": {
+                "enabled": true
+            },
+            "codelens": {
+                "enabled": true
+            },
+            "inlayHints": {
+                "enabled": true
+            },
+            "syntaxDocumentation": {
+                "enabled": true
+            }
+        },
+    },
+
+    // Settings
+    "svelte.enable-ts-plugin": true,
+    "floatFactory.floatConfig": {
+        "border": true,
+        "highlight": "CocFloating",
+        "borderhighlight": "CocFloatingBorder",
+    },
+
+    "colors.enable": true, // auto highlight colors w/ coc-highlight
+    "highlight.document.enable": false, // disables symbol-based highlighting (uses LSP highlighting instead)
+
+    "java.jdt.ls.java.home": "/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home",
+
+    // anvil
+    "anvil.debug": false,
+
+    // coc-clang
+    "clangd.fallbackFlags": [
+        "-std=c++20",
+        "-stdlib=libc++",
+        "-Wall",
+        "-Wextra",
+        "-Wpedantic",
+    ],
+
+    // UX
+    "html.autoClosingTags": false,
+    "typescript.autoClosingTags": false,
+    "javascript.autoClosingTags": false,
+
+
+    // UI Hints
+    "diagnostic.virtualText": true,
+    "diagnostic.virtualTextPrefix": "  ◆ ",
+    "diagnostic.virtualTextLines": 2,
+    "diagnostic.virtualTextAlign": "after",
+    "diagnostic.virtualTextWinCol": 160,
+    "diagnostic.virtualTextCurrentLineOnly": false,
+
+    "inlayHint.enable": true,
+    "inlayHint.enableParameter": true,
+    "inlayHint.refreshOnInsertMode": true,
+    "inlayHint.position": "inline",
+    "inlayHint.display": false,
+
+    "java.inlayHints.parameterNames.enabled": "all",
+
+    "typescript.inlayHints.parameterNames.enabled": "all",
+    "typescript.inlayHints.parameterTypes.enabled": true,
+    "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
+    "typescript.inlayHints.enumMemberValues.enabled": true,
+
+    "javascript.inlayHints.parameterNames.enabled": "all",
+    "javascript.inlayHints.parameterTypes.enabled": true,
+    "javascript.inlayHints.variableTypes.enabled": true,
+    "javascript.inlayHints.propertyDeclarationTypes.enabled": true,
+    "javascript.inlayHints.functionLikeReturnTypes.enabled": true,
+    "javascript.inlayHints.enumMemberValues.enabled": true,
+}

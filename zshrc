@@ -8,8 +8,8 @@ if [[ -o login ]]; then
         printf '\033[0m'
     fi
 
-    # DISPLAY_NAME="$(id -F)"
-    DISPLAY_NAME="$(id -u -n | awk '{print toupper(substr($0,1,1)) tolower(substr($0,2))}')"
+    DISPLAY_NAME="$(id -F)"
+    # DISPLAY_NAME="$(id -u -n | awk '{print toupper(substr($0,1,1)) tolower(substr($0,2))}')"
 
     if [[ -n "$DISPLAY_NAME" ]]; then
         printf '\033[1m'
@@ -85,7 +85,17 @@ if [[ -o login ]]; then
     printf '\n'
 fi
 
-source ~/bin/pwdt
+# zsh completions
+if type brew &>/dev/null; then
+  FPATH=$(brew --prefix)/share/zsh-completions:$FPATH
+  FPATH=$(brew --prefix)/share/zsh/site-functions:$FPATH
+
+  autoload -Uz compinit
+  compinit
+fi
+
+# pwd transfer
+[[ ! -f ~/bin/pwdt ]] || source ~/bin/pwdt
 
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
@@ -168,15 +178,6 @@ setopt histignorespace
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 
-# zsh completions
-if type brew &>/dev/null; then
-  FPATH=$(brew --prefix)/share/zsh-completions:$FPATH
-  FPATH=$(brew --prefix)/share/zsh/site-functions:$FPATH
-
-  autoload -Uz compinit
-  compinit
-fi
-
 # iTerm2 Shell Integration
 export ITERM2_SQUELCH_MARK=1
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
@@ -185,7 +186,9 @@ test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell
 export PATH=$HOME/.bun/bin:$PATH
 
 # Rust cargo
-. "$HOME/.cargo/env"
+if [[ -d "$HOME/.cargo" ]]; then
+    . "$HOME/.cargo/env"
+fi
 
 # Golang
 export PATH="$HOME/go/bin:$PATH"
@@ -253,15 +256,178 @@ export TERM="xterm-256color"
 # For a full list of active aliases, run `alias`.
 
 # === My aliases and helper functions ===
-alias vim="echo 'note: using nvim'; nvim" # use nvim instead of vim, old habits die hard
+if [[ -x "$(command -v nvim)" ]]; then
+    alias vim="nvim"
+else
+    alias nvim="vim"
+fi
+alias python="python3"
 alias cp="cp -c" # use macOS APFS cloning by default
 alias tetris="autoload -Uz tetriscurses && tetriscurses"
-alias obsbrowsercam="/Applications/OBS.app/Contents/MacOS/obs --enable-gpu --use-fake-ui-for-media-stream >> /dev/null 2>&1"
 
-# VMs
+# On macOS, alias reboot to use AppleScript to send System Events to be graceful to GUI apps
+reboot() {
+    osascript -e 'tell application "System Events" to restart' && \
+        echo "Restart has been scheduled and is underway." && \
+        echo "You will be logged out shortly."
+}
+
+
+# VM helpers
+
+# 1. lima shorthand for launching lima (is built-in)
+
+# 2. lima open/import/export helpers
+lima-open-from() {
+    echo "Opening the equivalent non-shared directory in Lima VM filesystem..."
+    echo
+
+    if [ -z "$1" ]; then
+        echo "Usage: lima-open-from <path-to-directory>"
+        echo
+        echo "Assuming current working directory by default!"
+        echo
+        __HOST_PATH="$(cd . && pwd)"
+    else
+        __HOST_PATH="$(cd "$1" && pwd)"
+    fi
+
+    # open the directory from the lima home
+    # get the full path
+    if [ "$?" -ne 0 ]; then
+        echo "Error: Could not access path '$1'"
+        return 1
+    fi
+
+    lima true || return 1
+    limactl ls default | grep "Running" >/dev/null 2>&1 ||
+    { echo "Error: Lima VM 'default' is not running"; return 1; }
+
+    __LIMA_HOME="$(lima sh -c 'printf "''$HOME''"')"
+    __ORIGIN_PATH="${__HOST_PATH/#$HOME/$__LIMA_HOME}"
+
+    lima sh -c '[ -d "'"$__ORIGIN_PATH"'" ]' ||
+    { echo "Error: Directory '$__ORIGIN_PATH' does not exist in Lima VM"; return 1; }
+
+    limactl shell --workdir="$__ORIGIN_PATH" default
+}
+
+lima-import-from() {
+    echo "Importing this directory from host into the Lima VM filesystem..."
+    echo
+
+    if [ -z "$1" ]; then
+        echo "Usage: lima-import-from <path-to-directory>"
+        echo
+        echo "Assuming current working directory by default!"
+        echo
+        __HOST_PATH="$(cd . && pwd)"
+    else
+        __HOST_PATH="$(cd "$1" && pwd)"
+    fi
+
+    # import the directory into the same location at the lima home
+    # get the full path
+    if [ "$?" -ne 0 ]; then
+        echo "Error: Could not access path '$1'"
+        return 1
+    fi
+
+    lima true || return 1
+    limactl ls default | grep "Running" >/dev/null 2>&1 ||
+    { echo "Error: Lima VM 'default' is not running"; return 1; }
+
+    __LIMA_HOME="$(lima sh -c 'printf "''$HOME''"')"
+
+    __ORIGIN_PATH="$__HOST_PATH"
+    __TARGET_PATH="${__HOST_PATH/#$HOME/$__LIMA_HOME}"
+
+    # truncate the target directory from path, as rsync will create a nested dir otherwise
+    # e.g. /path/to/dir -> /path/to
+    __TARGET_PATH="${__TARGET_PATH%/*}"
+
+    echo "Importing directory:"
+    echo " > From: $__ORIGIN_PATH"
+    echo " > To:   $__TARGET_PATH"
+    echo
+
+    echo "[Ctrl-C to abort]"
+    sleep 1
+
+    [ -d "$__ORIGIN_PATH" ] ||
+    { echo "Error: Directory '$__ORIGIN_PATH' does not exist on host"; return 1; }
+
+    lima mkdir -p "$__TARGET_PATH" ||
+    { echo "Error: Could not create directory '$__TARGET_PATH' in Lima VM"; return 1; }
+
+    limactl copy --backend=rsync -v -r "$__ORIGIN_PATH" default:"$__TARGET_PATH"
+    __EXIT_CODE=$?
+    if [ "$__EXIT_CODE" -ne 0 ]; then
+        return $__EXIT_CODE
+    fi
+
+    __DIRNAME="$(basename "$__ORIGIN_PATH")"
+    __TARGET_PATH="$__TARGET_PATH/$__DIRNAME"
+    limactl shell --workdir="$__TARGET_PATH" default
+}
+
+lima-export-to() {
+    echo "Exporting equivalent directory from Lima VM filesystem to host..."
+    echo
+
+    if [ -z "$1" ]; then
+        echo "Usage: lima-export-to <path-to-directory>"
+        echo
+        echo "Assuming current working directory by default!"
+        echo
+        __HOST_PATH="$(cd . && pwd)"
+    else
+        __HOST_PATH="$(cd "$1" && pwd)"
+    fi
+
+    # export the directory from the lima home to the same location on host
+
+    # get the full path
+    if [ "$?" -ne 0 ]; then
+        echo "Error: Could not access path '$1'"
+        return 1
+    fi
+
+    lima true || return 1
+    limactl ls default | grep "Running" >/dev/null 2>&1 ||
+    { echo "Error: Lima VM 'default' is not running"; return 1; }
+
+    __LIMA_HOME="$(lima sh -c 'printf "''$HOME''"')"
+    __ORIGIN_PATH="${__HOST_PATH/#$HOME/$__LIMA_HOME}"
+    __TARGET_PATH="$__HOST_PATH"
+
+    # truncate the target directory from path, as rsync will create a nested dir otherwise
+    # e.g. /path/to/dir -> /path/to
+    __TARGET_PATH="${__TARGET_PATH%/*}"
+
+    echo "Exporting directory:"
+    echo " > From: $__ORIGIN_PATH"
+    echo " > To:   $__TARGET_PATH"
+    echo
+
+    echo "[Ctrl-C to abort]"
+    sleep 1
+
+    lima sh -c '[ -d "'"$__ORIGIN_PATH"'" ]' ||
+    { echo "Error: Directory '$__ORIGIN_PATH' does not exist in Lima VM"; return 1; }
+
+    mkdir -p "$__TARGET_PATH" ||
+    { echo "Error: Could not create directory '$__TARGET_PATH' on host"; return 1; }
+
+    limactl copy --backend=rsync -v -r default:"$__ORIGIN_PATH" "$__TARGET_PATH"
+    return $?
+}
+
+# 3. lima ctfvm shortcuts
 alias ctfvm="limactl shell ctfvm"
 alias ctfvmrosetta="limactl shell ctfvm-rosetta"
 
+# 4. android vm management
 androidvm() {
     ANDROID_VM_PID=$(pgrep -L qemu-system | grep -e Android_VM | awk '{print $1}')
 
@@ -318,6 +484,8 @@ androidvm() {
         echo 'Usage: androidvm (start|stop) [args]'
     fi
 }
+
+# tools
 
 yarn-sync() {
     # sync package.json to match yarn.lock
@@ -439,6 +607,22 @@ xcSimStatusOverride() {
     xcrun simctl status_bar booted override --time "9:41 AM" --batteryState charged --batteryLevel 100 --wifiMode active --wifiBars 3 --cellularMode active --cellularBars 4 --operatorName ""
 }
 
+xcPredictiveCompletion() {
+    if [[ "$1" == "on" ]]; then
+        defaults write com.apple.dt.Xcode IDEModelAccessHasUserConsentForOnDeviceInteractions -bool YES
+        echo "Xcode predictive completion enabled."
+        echo "Restart Xcode to apply changes."
+
+    elif [[ "$1" == "off" ]]; then
+        defaults write com.apple.dt.Xcode IDEModelAccessHasUserConsentForOnDeviceInteractions -bool NO
+        echo "Xcode predictive completion disabled."
+        echo "Restart Xcode to apply changes."
+
+    else
+        echo "Usage: xcPredictiveCompletion (on|off)"
+    fi
+}
+
 ggcc() {
     # gnu gcc
     "$(compgen -c | grep -Eo "^gcc-[0-9]+$")" "$@"
@@ -527,4 +711,5 @@ proctorScreenRec() {
 }
 
 # sourced configs
-source ~/bin/hoard
+[ ! -f ~/bin/hoard ] || [ ! -x ~/bin/hoard ] || source ~/bin/hoard
+
