@@ -267,12 +267,17 @@ alias tetris="autoload -Uz tetriscurses && tetriscurses"
 if [[ "$_IS_MACOS" = true ]]; then
     # On macOS, alias reboot to use AppleScript to send System Events to be graceful to GUI apps
     reboot() {
-        read -n 1 -s -r -p "Are you sure you want to reboot? [y/N] " REPLY
+        echo "Are you sure you want to reboot? This will close all applications and log you out."
+        echo "Press [y/N] to confirm/reject."
         echo
-        if [[ ! $REPLY =~ ^[Yy] ]]; then
+        read -p "" REPLY
+        echo
+        echo
+        if [[ ! "$REPLY" =~ ^[Yy] ]]; then
             echo "Aborting reboot."
             return 1
         fi
+        sleep 1
         osascript -e 'tell application "System Events" to restart' && \
             echo "Restart has been scheduled and is underway." && \
             echo "You will be logged out shortly."
