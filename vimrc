@@ -1,6 +1,9 @@
 set number
 set ruler
 set mouse=a
+if exists('&mousemoveevent')
+  set mousemoveevent
+endif
 set encoding=utf-8
 set hlsearch
 syntax on
@@ -20,7 +23,7 @@ set t_Co=256                   "set colour
 set secure  " Don't let external configs do scary stuff
 set exrc    " Load local vimrc if found
 set cursorline
-set signcolumn=number
+set signcolumn=yes
 set updatetime=500
 set foldmethod=indent
 set foldminlines=10
@@ -32,6 +35,8 @@ set splitright
 set display+=lastline
 set scrolloff=10
 set fillchars+=stl:\ ,stlnc:\
+set title titlestring=%f
+set directory=~/.vim/swapfiles//
 if &t_Co == 8 && $TERM !~# '^Eterm'
   set t_Co=16
 endif
@@ -103,10 +108,180 @@ nmap <silent> ÷ :call <SID>show_documentation()<CR>
 function! s:show_documentation()
   if (index(['vim','help'], &filetype) >= 0)
     execute 'h '.expand('<cword>')
+  elseif CocAction('hasProvider', 'hover')
+    call CocActionAsync('doHover')
   else
-    call CocAction('doHover')
+    execute '!' . &keywordprg . ' ' . expand('<cword>')
   endif
 endfunction
+
+if !exists('g:coc_mouse_hover_delay')
+  let g:coc_mouse_hover_delay = 700
+endif
+
+let s:coc_mouse_hover_timer = -1
+let s:coc_mouse_hover_pos = {}
+let s:coc_mouse_hover_last = {}
+let s:coc_mouse_hover_winid = -1
+let s:coc_mouse_hover_locked = v:false
+
+function! s:coc_mouse_hover_close() abort
+  if s:coc_mouse_hover_locked
+    if s:coc_mouse_hover_winid > 0 && exists('*coc#float#valid') && coc#float#valid(s:coc_mouse_hover_winid)
+      return
+    endif
+    let s:coc_mouse_hover_locked = v:false
+  endif
+  if s:coc_mouse_hover_timer != -1
+    call timer_stop(s:coc_mouse_hover_timer)
+    let s:coc_mouse_hover_timer = -1
+  endif
+  if s:coc_mouse_hover_winid > 0 && exists('*coc#float#close')
+    call coc#float#close(s:coc_mouse_hover_winid)
+  endif
+  let s:coc_mouse_hover_winid = -1
+  let s:coc_mouse_hover_last = {}
+endfunction
+
+function! s:coc_mouse_hover_lock() abort
+  if s:coc_mouse_hover_timer != -1
+    call timer_stop(s:coc_mouse_hover_timer)
+    let s:coc_mouse_hover_timer = -1
+  endif
+  if s:coc_mouse_hover_winid <= 0
+    return
+  endif
+  if !exists('*coc#float#valid') || !coc#float#valid(s:coc_mouse_hover_winid)
+    let s:coc_mouse_hover_locked = v:false
+    return
+  endif
+  let l:pos = getmousepos()
+  let l:bufnr = winbufnr(l:pos.winid)
+  if l:bufnr == -1
+    return
+  endif
+  if empty(s:coc_mouse_hover_last)
+    return
+  endif
+  if l:bufnr == s:coc_mouse_hover_last.bufnr && l:pos.line == s:coc_mouse_hover_last.line && l:pos.column == s:coc_mouse_hover_last.col
+    let s:coc_mouse_hover_locked = v:true
+  endif
+endfunction
+
+function! s:coc_mouse_hover_click() abort
+  call s:coc_mouse_hover_lock()
+  return "\<LeftMouse>"
+endfunction
+
+function! s:coc_mouse_hover() abort
+  if s:coc_mouse_hover_locked
+    if s:coc_mouse_hover_winid > 0 && exists('*coc#float#valid') && coc#float#valid(s:coc_mouse_hover_winid)
+      return
+    endif
+    let s:coc_mouse_hover_locked = v:false
+  endif
+  if mode() !=# 'n'
+    return
+  endif
+  if !exists('*CocActionAsync')
+    return
+  endif
+
+  if exists('*coc#float#get_float_win_list')
+    let l:floats = coc#float#get_float_win_list()
+    if !empty(l:floats)
+      if s:coc_mouse_hover_winid <= 0
+        return
+      endif
+      let l:other = filter(copy(l:floats), 'v:val != s:coc_mouse_hover_winid')
+      if !empty(l:other)
+        return
+      endif
+    endif
+  endif
+
+  let l:pos = getmousepos()
+  if l:pos.winid == 0 || l:pos.line <= 0 || l:pos.column <= 0
+    call s:coc_mouse_hover_close()
+    return
+  endif
+
+  let l:bufnr = winbufnr(l:pos.winid)
+  if l:bufnr == -1
+    call s:coc_mouse_hover_close()
+    return
+  endif
+
+  let l:current = {'bufnr': l:bufnr, 'line': l:pos.line, 'col': l:pos.column}
+  if !empty(s:coc_mouse_hover_last) && s:coc_mouse_hover_last !=# l:current
+    call s:coc_mouse_hover_close()
+  endif
+  if !empty(s:coc_mouse_hover_last) && s:coc_mouse_hover_last ==# l:current
+    return
+  endif
+
+  let s:coc_mouse_hover_pos = l:pos
+  if s:coc_mouse_hover_timer != -1
+    call timer_stop(s:coc_mouse_hover_timer)
+  endif
+  let s:coc_mouse_hover_timer = timer_start(g:coc_mouse_hover_delay, function('<SID>coc_mouse_hover_fire'))
+endfunction
+
+function! s:coc_mouse_hover_fire(timer) abort
+  if empty(s:coc_mouse_hover_pos)
+    return
+  endif
+
+  let l:pos = s:coc_mouse_hover_pos
+  let l:now = getmousepos()
+  if l:now.winid != l:pos.winid || l:now.line != l:pos.line || l:now.column != l:pos.column
+    return
+  endif
+
+  let l:bufnr = winbufnr(l:pos.winid)
+  if l:bufnr == -1
+    return
+  endif
+
+  let l:orig_win = win_getid()
+  let l:did_hover = v:false
+  try
+    if l:pos.winid != l:orig_win
+      noautocmd call win_gotoid(l:pos.winid)
+    endif
+    let l:view = winsaveview()
+    let l:line = getline(l:pos.line)
+    let l:trimmed = substitute(l:line, '\s\+$', '', '')
+    if empty(l:trimmed)
+      call s:coc_mouse_hover_close()
+    else
+      let l:max_col = strdisplaywidth(l:trimmed)
+      let l:indent = indent(l:pos.line)
+      if l:pos.column > l:max_col || l:pos.column <= l:indent
+        call s:coc_mouse_hover_close()
+      else
+        call cursor(l:pos.line, l:pos.column)
+        if CocAction('hasProvider', 'hover')
+          let l:did_hover = CocAction('doHover')
+        endif
+      endif
+    endif
+  finally
+    call winrestview(l:view)
+    if l:pos.winid != l:orig_win
+      noautocmd call win_gotoid(l:orig_win)
+    endif
+  endtry
+
+  if l:did_hover
+    let s:coc_mouse_hover_last = {'bufnr': l:bufnr, 'line': l:pos.line, 'col': l:pos.column}
+    let s:coc_mouse_hover_winid = get(g:, 'coc_last_float_win', -1)
+    let s:coc_mouse_hover_locked = v:false
+  endif
+endfunction
+
+nnoremap <silent> <MouseMove> :call <SID>coc_mouse_hover()<CR>
+nnoremap <silent><expr> <LeftMouse> <SID>coc_mouse_hover_click()
 
 " coc: Highlight the symbol and its references when holding the cursor.
 autocmd CursorHold * silent call CocActionAsync('highlight')
@@ -124,14 +299,10 @@ nnoremap <silent> <Leader>rf <Plug>(coc-refactor)
 " coc: Hide on escape.
 nmap <silent> <Esc> :call coc#float#close_all() <CR>
 
-" Huggingface LLM support
-Plug 'huggingface/llm.nvim'
-
 " Github Copilot
 Plug 'github/copilot.vim'
 
-let g:copilot_filetypes = { 'markdown': v:true, 'ws': v:false }
-"let g:copilot_filetypes = { '*': v:false } " disable by default
+let g:copilot_filetypes = { 'markdown': v:true, 'ws': v:false, "dotenv": v:false }
 
 if system("curl http://localhost:11435/ 2>&1 | grep \"Empty reply from server\"") != ""
   echom "Using ollama-copilot's proxy (local predictions)"
@@ -220,6 +391,9 @@ Plug 'tpope/vim-commentary'
 " Xcode building and testing
 Plug 'gfontenot/vim-xcode'
 
+" Diff indicators
+Plug 'airblade/vim-gitgutter'
+
 " Setup icons
 if g:remoteSession
 else
@@ -236,15 +410,17 @@ let g:vimsence_file_explorer_text = 'Browsing files'
 let g:vimsence_file_explorer_details = 'Looking for files'
 
 " Anvil
-"Plug 'git@github.com:wxwern/anvil-lsp.git', {
-      \ 'branch': 'experiments',
+Plug 'wxwern/anvil-lsp', {
+      \ 'branch': 'main',
       \ 'rtp': 'extensions/vim',
       \ 'do': 'cd extensions/vim && npm install && npm run build'
       \ }
-Plug '~/Repositories/internal/anvil-lsp', {
-      \ 'rtp': 'extensions/vim',
-      \ 'do': 'cd extensions/vim && npm install && npm run build'
-      \ }
+
+" enable inlay hints in coc for anvil files
+autocmd FileType anvil call coc#config('inlayHint', {'display': v:true})
+" toggle anvil debug mode (check existing config to toggle)
+autocmd FileType anvil nnoremap <buffer> <Leader>avdb <Esc>:call coc#config('anvil', {'debug': v:true})<CR>
+autocmd FileType anvil nnoremap <buffer> <Leader>avnodb <Esc>:call coc#config('anvil', {'debug': v:false})<CR>
 
 call plug#end()
 
@@ -302,6 +478,11 @@ augroup wsfiledetect
   autocmd BufRead *.ws setfiletype ws
 augroup END
 
+" Autoset dotenv filetype
+autocmd BufRead .env* setfiletype dotenv
+autocmd BufEnter .env* setfiletype dotenv
+autocmd FileType dotenv set syntax=sh
+
 " helper tab width as spaces count (does not auto reindent)
 function SetTabWidth(n)
   exe 'set tabstop='.a:n
@@ -313,8 +494,12 @@ endfunction
 command! -nargs=1 TabWidth call SetTabWidth(<f-args>)
 
 " alias tab4 and tab2 commands
+nnoremap <Leader>tab8 :TabWidth 8<CR>:echom "Tab width set to 8"<CR>
 nnoremap <Leader>tab4 :TabWidth 4<CR>:echom "Tab width set to 4"<CR>
 nnoremap <Leader>tab2 :TabWidth 2<CR>:echom "Tab width set to 2"<CR>
+
+" alias quick restart language server (for coc) and show message
+nnoremap <Leader>lsp :CocRestart<CR><CR>:echom "Language server restarted"<CR>
 
 " set column line
 set colorcolumn=81,121,161,201,241,281,321
@@ -348,8 +533,8 @@ function! AdjustCocVirtualTextWinCol(outlier_frac)
     let max_text_width = line_lengths[index_target]
   endif
 
-  " set new wincol to next multiple of 40 above max_text_width (min 80)
-  let new_wincol = 80
+  " set new wincol to next multiple of 40 above max_text_width (min 120)
+  let new_wincol = 120
   while new_wincol + 1 < max_text_width
     let new_wincol += 40
   endwhile
@@ -396,64 +581,3 @@ hi CocFloatingBorder guifg=#888888
 " hi EndOfBuffer guibg=NONE ctermbg=NONE
 " autocmd vimenter * hi Normal guibg=NONE ctermbg=NONE
 " autocmd vimenter * hi EndOfBuffer guibg=NONE ctermbg=NONE
-
-
-" configure huggingface llm.nvim for offline use
-if has("nvim")
-  lua require('llm').setup({
-        \    backend="ollama",
-        \    url = "http://localhost:11434",
-        \
-        \    model='codellama:code',
-        \    fim = {
-        \      enabled = true,
-        \      prefix = '<PRE> ',
-        \      suffix = ' <SUF>',
-        \      middle = ' <MID>',
-        \    },
-        \    accept_keymap = '<F20>',
-        \    reject_keymap = '<F21>',
-        \    enable_suggestions_on_startup = false,
-        \
-        \    request_body = {
-        \      options = {
-        \        temperature = 0.2,
-        \        top_p = 0.95,
-        \      }
-        \    }
-        \})
-
-  function UseOllama()
-    Copilot disable
-    lua (function()
-          \   local llm = require('llm.completion')
-          \   if not llm.suggestions_enabled then
-          \     llm.toggle_suggestion()
-          \   end
-          \ end)()
-
-    iunmap <Tab>
-    lua vim.keymap.set("i", "<Tab>", function ()
-          \   local llm = require('llm.completion')
-          \   if llm.shown_suggestion ~= nil then
-          \     llm.complete()
-          \   else
-          \     local keys = vim.api.nvim_replace_termcodes('<Tab>', true, false, true)
-          \     vim.api.nvim_feedkeys(keys, 'n', false)
-          \   end
-          \ end,
-          \ { noremap = true, silent = true})
-
-    imap <A-]> <F20>
-    imap <A-[> <F21>
-    imap ‘ <F20>
-    imap “ <F21>
-
-    echom "Switched to offline codellama:code model for completions. GitHub Copilot no longer available."
-
-    command! -nargs=0 CopilotOffline echom "Already using offline codellama:code model for completions."
-    command! -nargs=0 Copilot echom ":Copilot commands are no longer available in offline mode. Restart vim to enable GitHub Copilot."
-
-  endfunction
-  command! -nargs=0 CopilotOffline call UseOllama()
-endif
