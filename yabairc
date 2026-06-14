@@ -218,8 +218,8 @@ yabai -m signal --add event=window_title_changed app="^Finder$" title="^Timeline
 
 # - for some intensive apps, toggle resolution to perfect integer scaling
 yabai -m signal --add event=application_launched app="^(Genshin Impact|Honkai: Star Rail|Infinity Nikki|Prism Launcher|OBS Studio)$" action='~/Scripts/toggle_display_scaling.sh default'
-yabai -m signal --add event=application_launched app='^(Heroic|CrossOver)$' action='~/Scripts/toggle_display_scaling.sh default-no-notch'
-yabai -m signal --add event=application_terminated app='^(Heroic|CrossOver)$' action='~/Scripts/toggle_display_scaling.sh default'
+yabai -m signal --add event=application_launched app='^(Heroic)$' action='~/Scripts/toggle_display_scaling.sh default-no-notch'
+yabai -m signal --add event=application_terminated app='^(Heroic)$' action='~/Scripts/toggle_display_scaling.sh default'
 
 # - sync true tone to whether a color-accuracy-required app is focused
 yabai -m signal --add event=application_front_switched action='~/Scripts/sync_true_tone.sh'

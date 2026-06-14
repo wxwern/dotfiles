@@ -185,7 +185,7 @@ export LC_ALL=en_US.UTF-8
 
 # iTerm2 Shell Integration
 export ITERM2_SQUELCH_MARK=1
-test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh" || true
 
 # bun
 export PATH=$HOME/.bun/bin:$PATH
@@ -213,6 +213,9 @@ export PATH=$ANDROID_SDK/emulator:$ANDROID_SDK/tools:$PATH
 
 # fastlane
 export PATH="$HOME/.fastlane/bin:$PATH"
+
+# latex
+export PATH="/Library/TeX/texbin/:$PATH"
 
 # Plugin config
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#606060"
@@ -267,7 +270,9 @@ alias tetris="autoload -Uz tetriscurses && tetriscurses"
 if [[ "$_IS_MACOS" = true ]]; then
     # On macOS, alias reboot to use AppleScript to send System Events to be graceful to GUI apps
     reboot() {
-        echo "Are you sure you want to reboot? This will close all applications and log you out."
+        echo "Are you sure you want to reboot?."
+        echo "This will gracefully close all applications and log you out."
+        echo
         echo "Press [y/N] to confirm/reject."
         echo
         read -p "" REPLY
@@ -277,13 +282,41 @@ if [[ "$_IS_MACOS" = true ]]; then
             echo "Aborting reboot."
             return 1
         fi
-        sleep 1
+        echo "Cancel with Ctrl-C in 3s if not intended."
+        echo "Use sudo to force an immediate reboot."
+        echo
+        sleep 3
+        echo
         osascript -e 'tell application "System Events" to restart' && \
             echo "Restart has been scheduled and is underway." && \
             echo "You will be logged out shortly."
     }
 fi
 
+opencode-unsandboxed() {
+    # search opencode in PATH and run it with the given arguments
+    # exclude aliases and functions to avoid infinite recursion
+    local BIN="$(which -a -p opencode | grep -vE 'alias|function' | head -n 1)"
+    if [ -x "$BIN" ]; then
+        "$BIN" "$@"
+        return $?
+    else
+        echo "Error: opencode not found in PATH"
+        return 1
+    fi
+}
+
+opencode-sandboxed() {
+    local BIN=~/Repositories/internal/opencode-sandbox/opencode-sandbox
+    if [ -x "$BIN" ]; then
+        "$BIN" "$@"
+    else
+        echo "Error: opencode-sandbox not found at $BIN"
+        return 1
+    fi
+}
+
+alias opencode="opencode-sandboxed"
 
 # VM helpers
 
@@ -294,6 +327,7 @@ lima-open-from() {
     echo "Opening the equivalent non-shared directory in Lima VM filesystem..."
     echo
 
+    local __HOST_PATH=""
     if [ -z "$1" ]; then
         echo "Usage: lima-open-from <path-to-directory>"
         echo
@@ -315,8 +349,8 @@ lima-open-from() {
     limactl ls default | grep "Running" >/dev/null 2>&1 ||
     { echo "Error: Lima VM 'default' is not running"; return 1; }
 
-    __LIMA_HOME="$(lima sh -c 'printf "''$HOME''"')"
-    __ORIGIN_PATH="${__HOST_PATH/#$HOME/$__LIMA_HOME}"
+    local __LIMA_HOME="$(lima sh -c 'printf "''$HOME''"')"
+    local __ORIGIN_PATH="${__HOST_PATH/#$HOME/$__LIMA_HOME}"
 
     lima sh -c '[ -d "'"$__ORIGIN_PATH"'" ]' ||
     { echo "Error: Directory '$__ORIGIN_PATH' does not exist in Lima VM"; return 1; }
@@ -328,6 +362,7 @@ lima-import-from() {
     echo "Importing this directory from host into the Lima VM filesystem..."
     echo
 
+    local __HOST_PATH=""
     if [ -z "$1" ]; then
         echo "Usage: lima-import-from <path-to-directory>"
         echo
@@ -349,10 +384,10 @@ lima-import-from() {
     limactl ls default | grep "Running" >/dev/null 2>&1 ||
     { echo "Error: Lima VM 'default' is not running"; return 1; }
 
-    __LIMA_HOME="$(lima sh -c 'printf "''$HOME''"')"
+    local __LIMA_HOME="$(lima sh -c 'printf "''$HOME''"')"
 
-    __ORIGIN_PATH="$__HOST_PATH"
-    __TARGET_PATH="${__HOST_PATH/#$HOME/$__LIMA_HOME}"
+    local __ORIGIN_PATH="$__HOST_PATH"
+    local __TARGET_PATH="${__HOST_PATH/#$HOME/$__LIMA_HOME}"
 
     # truncate the target directory from path, as rsync will create a nested dir otherwise
     # e.g. /path/to/dir -> /path/to
@@ -373,12 +408,12 @@ lima-import-from() {
     { echo "Error: Could not create directory '$__TARGET_PATH' in Lima VM"; return 1; }
 
     limactl copy --backend=rsync -v -r "$__ORIGIN_PATH" default:"$__TARGET_PATH"
-    __EXIT_CODE=$?
+    local __EXIT_CODE=$?
     if [ "$__EXIT_CODE" -ne 0 ]; then
         return $__EXIT_CODE
     fi
 
-    __DIRNAME="$(basename "$__ORIGIN_PATH")"
+    local __DIRNAME="$(basename "$__ORIGIN_PATH")"
     __TARGET_PATH="$__TARGET_PATH/$__DIRNAME"
     limactl shell --workdir="$__TARGET_PATH" default
 }
@@ -387,6 +422,7 @@ lima-export-to() {
     echo "Exporting equivalent directory from Lima VM filesystem to host..."
     echo
 
+    local __HOST_PATH=""
     if [ -z "$1" ]; then
         echo "Usage: lima-export-to <path-to-directory>"
         echo
@@ -409,9 +445,9 @@ lima-export-to() {
     limactl ls default | grep "Running" >/dev/null 2>&1 ||
     { echo "Error: Lima VM 'default' is not running"; return 1; }
 
-    __LIMA_HOME="$(lima sh -c 'printf "''$HOME''"')"
-    __ORIGIN_PATH="${__HOST_PATH/#$HOME/$__LIMA_HOME}"
-    __TARGET_PATH="$__HOST_PATH"
+    local __LIMA_HOME="$(lima sh -c 'printf "''$HOME''"')"
+    local __ORIGIN_PATH="${__HOST_PATH/#$HOME/$__LIMA_HOME}"
+    local __TARGET_PATH="$__HOST_PATH"
 
     # truncate the target directory from path, as rsync will create a nested dir otherwise
     # e.g. /path/to/dir -> /path/to
@@ -441,7 +477,7 @@ alias ctfvmrosetta="limactl shell ctfvm-rosetta"
 
 # 4. android vm management
 androidvm() {
-    ANDROID_VM_PID=$(pgrep -L qemu-system | grep -e Android_VM | awk '{print $1}')
+    local ANDROID_VM_PID=$(pgrep -L qemu-system | grep -e Android_VM | awk '{print $1}')
 
     if [ -z "$1" ]; then
         echo 'Usage: androidvm (start|stop) [args]'
@@ -548,7 +584,7 @@ rmtimecode() {
     echo "Proceeding..."
 
     for file in *_noTC.mov; do
-        original="${file%_noTC.mov}.mov";
+        local original="${file%_noTC.mov}.mov";
         mv "$file" "$original" && echo "Removed timecode from $original" || echo "Error processing $original";
     done
 

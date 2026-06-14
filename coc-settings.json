@@ -66,10 +66,12 @@
 
     "java.jdt.ls.java.home": "/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home",
 
-    // anvil
-    "anvil.debug": false,
+    "anvil.showTimingInfo": {
+        "asInlayHints": "condensed",
+        "onHover": true
+    },
 
-    // coc-clang
+    // coc-
     "clangd.fallbackFlags": [
         "-std=c++20",
         "-stdlib=libc++",
@@ -92,18 +94,24 @@
     "diagnostic.virtualTextWinCol": 160,
     "diagnostic.virtualTextCurrentLineOnly": false,
 
+    "diagnostic.errorSign": "◆",
+    "diagnostic.warningSign": "!",
+    "diagnostic.infoSign": "i",
+
     "inlayHint.enable": true,
     "inlayHint.enableParameter": true,
     "inlayHint.refreshOnInsertMode": true,
     "inlayHint.position": "inline",
     "inlayHint.display": false,
+    "inlayHint.maximumLength": 32,
 
     "java.inlayHints.parameterNames.enabled": "all",
 
     "typescript.inlayHints.parameterNames.enabled": "all",
     "typescript.inlayHints.parameterTypes.enabled": true,
-    "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
     "typescript.inlayHints.enumMemberValues.enabled": true,
+    "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
+    "typescript.inlayHints.propertyDeclarationTypes.enabled": false,
 
     "javascript.inlayHints.parameterNames.enabled": "all",
     "javascript.inlayHints.parameterTypes.enabled": true,
