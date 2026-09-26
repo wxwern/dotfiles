@@ -54,6 +54,8 @@ if [ -z $(which brew) ]; then
     exit 1
 fi
 
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
 echo_title "Homebrew Dependencies"
 read -p "Check/install preferred primary Homebrew dependencies? (y/N) " -n 1 -r
 echo
@@ -251,6 +253,24 @@ if [[ -f ~/.vim/autoload/plug.vim || -f ~/.local/share/nvim/site/autoload/plug.v
         vim +PlugInstall +qall
         nvim +PlugInstall +qall
     fi
+fi
+
+if command -v skhd &>/dev/null; then
+    # yabai cannot preserve state after a restart
+    # so check to verify whether this is OK atm
+    read -p "Restart yabai? (y/N) " -n 1 -r
+    if [[ $REPLY =~ ^[Yy]$ ]]
+    then
+        yabai --restart-service || true
+    fi
+fi
+
+if command -v skhd &>/dev/null; then
+    # skhd has hot reload for config changes
+    # service may however not play well due to link changes,
+    # so we force a restart
+    echo_item "Restarting skhd"
+    skhd --restart-service || true
 fi
 
 # --- End ---
