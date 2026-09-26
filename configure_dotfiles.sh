@@ -193,6 +193,10 @@ importCustom "bordersrc" ".config/borders/bordersrc" $1
 importDot "*profile" $1
 importDot "p10k.zsh" $1
 
+# iterm2 dynamic profiles
+if [ ! -d "$HOME/Library/Application Support/iTerm2/DynamicProfiles" ]; then mkdir -p "$HOME/Library/Application Support/iTerm2/DynamicProfiles"; fi
+importCustom "others/iTermProfiles.json" "Library/Application Support/iTerm2/DynamicProfiles/iTermProfiles.json" $1
+
 echo
 echo "Dotfiles linkage complete."
 echo

@@ -25,6 +25,7 @@ if [ -d "$HOME/bin" ]; then
   export PATH="$HOME/bin:$PATH"
 fi
 
+# setup ~/.cache in ~/Library/Caches/dotcache and symlinked
 if [ ! -d "$HOME"/Library/Caches/dotcache ]; then
   if [ -d "$HOME"/.cache ]; then
     mv "$HOME"/.cache "$HOME"/Library/Caches/dotcache

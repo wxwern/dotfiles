@@ -224,11 +224,10 @@ default, noscripting < ctrl + cmd - d : yabai -m window --insert east
 default, noscripting < ctrl + cmd - z : yabai -m window --insert stack
 
 # space manipulation
-default, noscripting < ctrl + cmd - r : yabai -m space --rotate 270     #rotate 90° clockwise
-default, noscripting < ctrl + cmd - x : yabai -m space --mirror x-axis  #flip along x axis
-default, noscripting < ctrl + cmd - y : yabai -m space --mirror y-axis  #flip along y axis
-default, noscripting < fn + ctrl + cmd - r : yabai -m window --toggle split #'rotate' windows that are in its parent tree
-default, noscripting < shift + ctrl + cmd - r : yabai -m window --toggle split #'rotate' windows that are in its parent tree
+default, noscripting < shift + ctrl + cmd - r : yabai -m space --rotate 270     #rotate 90° clockwise
+default, noscripting < shift + ctrl + cmd - x : yabai -m space --mirror x-axis  #flip along x axis
+default, noscripting < shift + ctrl + cmd - y : yabai -m space --mirror y-axis  #flip along y axis
+default, noscripting < ctrl + cmd - r : yabai -m window --toggle split #'rotate' windows that are in its parent tree
 
 # toggle floating window
 default, noscripting < ctrl + cmd - f :

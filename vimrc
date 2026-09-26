@@ -410,7 +410,7 @@ let g:vimsence_file_explorer_text = 'Browsing files'
 let g:vimsence_file_explorer_details = 'Looking for files'
 
 " Anvil
-Plug 'wxwern/anvil-lsp', {
+Plug 'focs-lab/anvil-lsp', {
       \ 'branch': 'main',
       \ 'rtp': 'extensions/vim',
       \ 'do': 'cd extensions/vim && npm install && npm run build'

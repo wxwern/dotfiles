@@ -162,6 +162,11 @@ COMPLETION_WAITING_DOTS="true"
 # see 'man strftime' for details.
 HIST_STAMPS="yyyy-mm-dd"
 
+# How many lines of history to keep in active memory
+export HISTSIZE=100000
+# How many lines of history to save in the history file on disk
+export SAVEHIST=100000000
+
 # Which plugins would you like to load?
 # Standard plugins can be found in ~/.oh-my-zsh/plugins/*
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
@@ -203,6 +208,10 @@ export PATH="$HOME/go/bin:$PATH"
 # This section can be safely removed at any time if needed.
 [[ ! -r '/Users/wern/.opam/opam-init/init.zsh' ]] || source '/Users/wern/.opam/opam-init/init.zsh' > /dev/null 2> /dev/null
 # END opam configuration
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/wern/.lmstudio/bin"
+# End of LM Studio CLI section
 
 # Android
 export ANDROID_HOME=/Users/$USER/Library/Android/sdk
