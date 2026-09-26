@@ -1,12 +1,21 @@
 # dotfiles
 
-This repository contains dotfiles, scripts and config files that is used to setup my macOS system.
+This repository contains a basic setup of my macOS system.
 
-To have most apps setup up and running, simply execute `install_software.sh`, which will automatically install formulae, casks and Mac App Store apps I use.
+## Automated setup
 
-To install most dotfiles, simply run the `configure_dotfiles.sh` script. It'll not override existing files unless `-f` is used, and performs a soft link rather than copy the files for easier maintainence.
+```
+./install_software.sh
+```
+Installs most software I use on my macOS system, including Homebrew formulae, casks and Mac App Store apps.
 
-To apply some basic system tweaks, run the `configure_system.sh` script.
+```
+./configure_system.sh
+```
+Configures system and application tweaks.
 
-Caveats:
-- Manual installation required for items in the `others` directory.
+```
+./configure_dotfiles.sh
+```
+Configures dotfiles and other config files via symlinks. The first arg of this script is passed to all `ln` commands (e.g., `-f` can be used to force overwrite existing files).
+
