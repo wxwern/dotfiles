@@ -120,13 +120,17 @@ else
   fi
 fi
 
+if [ "$(diskutil info "$VOL_DEV" | awk '/Mount Point/ {print $3}')" != "$MOUNT_POINT" ]; then
+  echo_warn "Mount failed (wrong location?). Ensure /etc/fstab has the correct entry and try again."
+  exit 1
+fi
 
 # PHASE 3
 phase-header "3" "Directories"
 
 # --- Directory structure ---
 echo_title "Creating volume directory structure..."
-TARGET_DIRS=("_global" "external" "internal" "local" "worktrees")
+TARGET_DIRS=("_global" "external" "internal" "local" "scripts" "worktrees")
 for dir in "${TARGET_DIRS[@]}"; do
   echo_item "mkdir -p $MOUNT_POINT/$dir"
   mkdir -p "$MOUNT_POINT/$dir"
@@ -190,6 +194,7 @@ ensure_link "$HOME/Repositories/internal" "../Development/internal" "$MOUNT_POIN
 ensure_link "$HOME/Repositories/external" "../Development/external" "$MOUNT_POINT/external"
 ensure_link "$HOME/Repositories/worktrees" "../Development/worktrees" "$MOUNT_POINT/worktrees"
 ensure_link "$HOME/Projects" "Development/local" "$MOUNT_POINT/local"
+ensure_link "$HOME/Scripts" "Development/scripts" "$MOUNT_POINT/scripts"
 ensure_link "$HOME/.bun" "./Development/_global/bun" "$MOUNT_POINT/_global/bun"
 ensure_link "$HOME/dotfiles" "Repositories/internal/dotfiles" "$MOUNT_POINT/internal/dotfiles"
 
