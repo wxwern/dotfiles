@@ -15,12 +15,16 @@ phase-header() {
   echo
 }
 
+echo_title() {
+  echo -e "\033[1;32m$1\033[0m"
+}
+
 echo_item() {
   echo "  - $1"
 }
 
-echo_title() {
-  echo -e "\033[1;32m$1\033[0m"
+echo_warn() {
+  echo -e "\033[1;31m  - $1\033[0m"
 }
 
 set_nested_default() {
@@ -194,6 +198,8 @@ if pgrep -x "Safari" > /dev/null; then
     echo_item "Quitting Safari"
     killall Safari
     sleep 1
+  else
+    echo_warn "Safari left running - these settings may fail to apply"
   fi
 fi
 
@@ -210,7 +216,7 @@ if pgrep -x "iTerm2" > /dev/null; then
     killall iTerm2
     sleep 1
   else
-    echo_item "iTerm2 left running - these settings may be overwritten on exit"
+    echo_warn "iTerm2 left running - these settings may fail to apply"
   fi
 fi
 echo_item "Allowing clipboard access"

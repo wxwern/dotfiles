@@ -20,12 +20,12 @@ phase-header() {
   echo
 }
 
-echo_item() {
-  echo "  - $1"
-}
-
 echo_title() {
   echo -e "\033[1;32m$1\033[0m"
+}
+
+echo_item() {
+  echo "  - $1"
 }
 
 echo_warn() {
