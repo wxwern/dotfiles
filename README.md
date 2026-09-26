@@ -22,5 +22,5 @@ Creates the `Development` APFS volume if it doesn't exist, mounts it at `~/Devel
 ```
 ./configure_dotfiles.sh
 ```
-Configures dotfiles and other config files via symlinks. The first arg of this script is passed to all `ln` commands (e.g., `-f` can be used to force overwrite existing files).
+Configures dotfiles and other config files via symlinks. The first arg of this script is passed to all `ln` commands.
 

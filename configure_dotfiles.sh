@@ -178,6 +178,14 @@ importDot() {
         f=$(basename -- "$file")
         cd ~
         echo_item "Importing $f -> ~/.$f"
+        if [ -L ".$f" ]; then
+            echo_warn "Replacing existing symlink .$f"
+            rm ".$f"
+        elif [ -f ".$f" ]; then
+            TS=$(date +%s)
+            echo_warn "Backing up existing .$f to .$f.$TS.bak"
+            mv ".$f" ".$f.$TS.bak"
+        fi
         ln $2 -s "$DIR/$f" ".$f" 2>&1 | sed 's/^/    /'
         cd "$DIR"
     done
@@ -185,6 +193,14 @@ importDot() {
 importCustom() {
     cd ~
     echo_item "Importing $1 -> ~/$2"
+    if [ -L "$2" ]; then
+        echo_warn "Replacing existing symlink $2"
+        rm "$2"
+    elif [ -f "$2" ]; then
+        TS=$(date +%s)
+        echo_warn "Backing up existing $2 to $2.$TS.bak"
+        mv "$2" "$2.$TS.bak"
+    fi
     ln $3 -s "$DIR/$1" "$HOME/$2" 2>&1 | sed 's/^/    /'
     cd "$DIR"
 }
