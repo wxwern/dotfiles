@@ -174,8 +174,6 @@ brew "yt-dlp"
 brew "mpv"
 # Open source relational database management system
 brew "mysql", restart_service: :changed
-# Fast, highly customisable system info script
-brew "neofetch"
 # Ambitious Vim-fork focused on extensibility and agility
 brew "neovim"
 # Utility for managing network connections
@@ -322,7 +320,6 @@ brew "teamookla/speedtest/speedtest", trusted: true
 cask "anaconda"
 # Tools for building Android applications
 cask "android-studio"
-cask "arduino"
 # Browse/extract images from .car files
 cask "asset-catalog-tinkerer"
 # Digital audio mixing application
@@ -365,13 +362,10 @@ cask "eqmac"
 cask "finetune"
 # Web browser
 cask "firefox"
-# Font editor and converter for outline and bitmap fonts
-cask "fontforge-app"
 # Browse, install and purchase effects and plugins from a huge catalogue
 cask "fxfactory"
 # Tool to measure the computer system's performance
 cask "geekbench"
-cask "ghidra"
 # Xcode extension for GitHub Copilot
 cask "github-copilot-for-xcode"
 # Art style AI mimicry disruptor
@@ -386,7 +380,6 @@ cask "google-earth-pro"
 cask "heaven"
 # Game launcher
 cask "heroic"
-cask "idafree"
 # Free and open-source media player
 cask "iina"
 # iOS Sideloading Companion
@@ -507,7 +500,6 @@ mas "Delete Apps", id: 1033808943
 mas "Developer", id: 640199958
 mas "Discovery", id: 1381004916
 mas "Final Cut Pro", id: 424389933
-mas "Fluent Reader", id: 1520907427
 mas "GarageBand", id: 682658836
 mas "Goodnotes", id: 1444383602
 mas "Hidden Bar", id: 1452453066
