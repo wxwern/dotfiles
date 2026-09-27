@@ -1,8 +1,7 @@
 tap "anomalyco/tap", trusted: { formulae: ["opencode"] }
-tap "asmvik/formulae", "https://github.com/asmvik/homebrew-formulae.git"
+tap "asmvik/formulae"
 tap "domt4/autoupdate", "https://github.com/DomT4/homebrew-autoupdate", trusted: { commands: ["autoupdate"] }
-tap "gbevin/tools"
-tap "localhost/tap", trusted: true
+tap "gbevin/tools", trusted: { formulae: ["sendmidi"] }
 tap "mongodb/brew", trusted: { formulae: ["mongodb-database-tools", "mongodb-enterprise"] }
 tap "osx-cross/arm", trusted: { formulae: ["arm-none-eabi-binutils", "arm-none-eabi-gcc@8"] }
 tap "osx-cross/avr", trusted: { formulae: ["avr-binutils", "avr-gcc@8"] }
@@ -20,12 +19,18 @@ brew "openjdk"
 brew "apktool"
 # Record and share terminal sessions
 brew "asciinema"
+# Interpreted, interactive, object-oriented programming language
+brew "python@3.14"
 # Perf monitoring CLI tool for Apple Silicon
 brew "asitop"
 # Automatic configure script builder
 brew "autoconf"
 # Tool for generating GNU Standards-compliant Makefiles
 brew "automake"
+# Library for communicating with USB and Bluetooth HID devices
+brew "hidapi"
+# Library for USB device access
+brew "libusb"
 # Bourne-Again SHell, a UNIX command interpreter
 brew "bash"
 # Get/set bluetooth power and discoverable state
@@ -74,8 +79,6 @@ brew "fcrackzip"
 brew "fd"
 # Play, record, convert, and stream select audio and video codecs
 brew "ffmpeg"
-# OCR (Optical Character Recognition) engine
-brew "tesseract"
 # Collection of GNU find, xargs, and locate
 brew "findutils"
 # User-friendly command-line shell for UNIX-like operating systems
@@ -86,10 +89,10 @@ brew "fortune"
 brew "fzf"
 # GNU awk utility
 brew "gawk"
-# New file format for still image compression
-brew "jpeg-xl"
 # GitHub command-line tool
 brew "gh"
+# OCR (Optical Character Recognition) engine
+brew "tesseract"
 # Interpreter for PostScript and PDF
 brew "ghostscript"
 # Distributed revision control system
@@ -102,26 +105,22 @@ brew "git-lfs"
 brew "gnu-sed"
 # GNU version of the tar archiving utility
 brew "gnu-tar"
-# Library for USB device access
-brew "libusb"
 # GNU Privacy Guard (OpenPGP)
 brew "gnupg"
 # Open source programming language to build simple/reliable/efficient software
 brew "go"
 # Open-source build automation tool based on the Groovy and Kotlin DSL
 brew "gradle"
-# Generic library support script
-brew "libtool"
 # Colorize logfiles and command output
 brew "grc"
 # GNU grep, egrep and fgrep
 brew "grep"
-# Library for communicating with USB and Bluetooth HID devices
-brew "hidapi"
 # Uses CSS selectors to extract bits content from HTML files
 brew "htmlq"
 # Improved top (interactive process viewer)
 brew "htop"
+# Generic library support script
+brew "libtool"
 # Tools and libraries to manipulate images in select formats
 brew "imagemagick"
 # Install and debug iPhone apps from the command-line
@@ -130,8 +129,8 @@ brew "ios-deploy"
 brew "iperf"
 # Update of iperf: measures TCP, UDP, and SCTP bandwidth
 brew "iperf3"
-# Development kit for the Java programming language
-brew "openjdk@21", link: true
+# New file format for still image compression
+brew "jpeg-xl"
 # Lightweight and flexible command-line JSON processor
 brew "jq"
 # Pager program similar to more
@@ -154,6 +153,8 @@ brew "lima-additional-guestagents"
 brew "lolcat"
 # Sudoless performance monitoring for Apple Silicon processors
 brew "macmon"
+# Apple Silicon Monitor Top written in Go Lang
+brew "mactop"
 # Utility for directing compilation
 brew "make"
 # Mac App Store command-line interface
@@ -206,6 +207,8 @@ brew "opencode"
 brew "openjdk@11"
 # Development kit for the Java programming language
 brew "openjdk@17"
+# Development kit for the Java programming language
+brew "openjdk@21", link: true
 # PNG file optimizer
 brew "optipng"
 # Swiss-army knife of markup format conversion
@@ -230,8 +233,6 @@ brew "py3cairo"
 brew "pyqt"
 # Python library for creating static, animated, and interactive visualizations
 brew "python-matplotlib"
-# Interpreted, interactive, object-oriented programming language
-brew "python"
 # Cross-platform application and UI framework
 brew "qt"
 # Safe, concurrent, practical language
@@ -302,10 +303,6 @@ brew "zsh"
 brew "zsh-completions"
 # Simple hotkey-daemon for macOS.
 brew "asmvik/formulae/skhd", trusted: true
-# A tiling window manager for macOS based on binary space partitioning.
-brew "asmvik/formulae/yabai", trusted: true
-# Multi-platform command-line tool to send out MIDI messages
-brew "gbevin/tools/sendmidi", trusted: true
 # High-performance, schema-free, document-oriented database
 brew "mongodb/brew/mongodb-community", trusted: true
 # Incredibly fast JavaScript runtime, bundler, transpiler and package manager - all in one.
@@ -316,6 +313,10 @@ brew "qmk/qmk/qmk", trusted: true
 brew "rakalex/mac-brightnessctl/mac-brightnessctl", trusted: true
 # Ookla Speedtest
 brew "teamookla/speedtest/speedtest", trusted: true
+# A tiling window manager for macOS based on binary space partitioning (HEAD-only; includes personal patches).
+brew "wxwern/formulae/yabai", args: ["HEAD"], trusted: true
+# Image editing and design software
+cask "affinity"
 # Distribution of the Python and R programming languages for scientific computing
 cask "anaconda"
 # Tools for building Android applications
@@ -326,8 +327,6 @@ cask "asset-catalog-tinkerer"
 cask "au-lab"
 # Multi-track audio editor and recorder
 cask "audacity"
-# Display management tool
-cask "betterdisplay"
 # Virtual Audio Driver
 cask "blackhole-2ch"
 # 3D creation suite
@@ -348,8 +347,6 @@ cask "coconutbattery"
 cask "crossover"
 # Browser for SQLite databases
 cask "db-browser-for-sqlite"
-# BitTorrent client
-cask "deluge"
 # Voice and text chat software
 cask "discord"
 # Developer platform
@@ -362,10 +359,9 @@ cask "eqmac"
 cask "finetune"
 # Web browser
 cask "firefox"
+cask "font-sf-pro"
 # Browse, install and purchase effects and plugins from a huge catalogue
 cask "fxfactory"
-# Tool to measure the computer system's performance
-cask "geekbench"
 # Xcode extension for GitHub Copilot
 cask "github-copilot-for-xcode"
 # Art style AI mimicry disruptor
@@ -394,12 +390,16 @@ cask "jump-desktop-connect"
 cask "jupyter-notebook-ql"
 # Keyboard customiser
 cask "karabiner-elements"
+# App providing offline access to Wikipedia and many other web sites
+cask "kiwix"
 # Free and open-source painting and sketching program
 cask "krita"
 # Free cross-platform office suite, fresh version
 cask "libreoffice"
 # Customise mouse behavior
 cask "linearmouse"
+# Discover, download, and run local LLMs
+cask "lm-studio"
 # Software for Logitech devices
 cask "logi-options+"
 # Controls and monitors all fans on Apple computers
@@ -424,6 +424,8 @@ cask "mounty"
 cask "musescore"
 # Power management and monitoring for Apple Mx processors
 cask "mx-power-gadget"
+# Tool that makes images unsuitable for AI model training
+cask "nightshade"
 # Open-source software for live streaming and screen recording
 cask "obs"
 # Web browser
@@ -448,6 +450,8 @@ cask "rstudio"
 cask "scenebuilder"
 # Tool to format memory cards complying with the SD File System spec
 cask "sdformatter"
+# Tool that provides consistent, highly configurable symbols for apps
+cask "sf-symbols"
 # Instant messaging application focusing on security
 cask "signal"
 # Application to control your PlayStation 4 or PlayStation 5
@@ -480,7 +484,7 @@ cask "zoom"
 cask "zotero"
 mas "3d Scanner App", id: 1419913995
 mas "Accelerate", id: 1459809092
-mas "AdGuard for Safari", id: 1440147259
+mas "AdGuard Mini", id: 1440147259
 mas "Affinity Designer 2", id: 1616831348
 mas "Affinity Photo 2", id: 1616822987
 mas "Affinity Publisher 2", id: 1606941598
@@ -494,6 +498,7 @@ mas "Bluetooth Inspector", id: 1509085044
 mas "Boop", id: 1518425043
 mas "Calculator Plus", id: 1181465428
 mas "Cinebench", id: 1438772273
+mas "Compressor", id: 424390742
 mas "CrystalFetch", id: 6454431289
 mas "DaVinci Resolve", id: 571213070
 mas "Delete Apps", id: 1033808943
@@ -508,6 +513,7 @@ mas "Key Codes", id: 414568915
 mas "Keynote", id: 361285480
 mas "Kiwix", id: 997079563
 mas "Logic Pro", id: 634148309
+mas "MainStage", id: 634159523
 mas "Microsoft Excel", id: 462058435
 mas "Microsoft OneNote", id: 784801555
 mas "Microsoft PowerPoint", id: 462062816
