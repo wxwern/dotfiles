@@ -42,17 +42,21 @@ echo "Prerequisites installation complete."
 phase-header "2" "Software Installation"
 echo "Installing all software referenced in Brewfile..."
 cd "$(dirname "$0")"
-brew bundle install --file=./Brewfile || exit 1
+brew bundle install --file=./Brewfile --verbose || exit 1
 
 # PHASE 3
 phase-header "3" "Post-Installation Configuration"
 echo "Performing post-installation configuration..."
 
+echo "Installing Rosetta 2 for Apple Silicon compatibility..."
+softwareupdate --install-rosetta || true
+
+echo "Preparing skhd and yabai for use. You may need to grant permissions in System Settings."
 open -a "System Settings" "x-apple.systempreferences:com.apple.preference.security"
 (skhd --install-service || true) && skhd --start-service && echo 'skhd has started'
 (yabai --install-service || true) && yabai --start-service && echo 'yabai has started'
 
-echo "You may need to grant permissions. Press Enter to perform a restart of these services once done, or Ctrl+C to abort"
+echo "Press Enter to perform a restart of these services, or Ctrl+C to abort"
 read -p ''
 skhd --restart-service
 yabai --restart-service
