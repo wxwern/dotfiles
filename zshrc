@@ -196,7 +196,7 @@ test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell
 export PATH=$HOME/.bun/bin:$PATH
 
 # Rust cargo
-[[ ! -d "$HOME/.cargo" ]] || . "$HOME/.cargo/env"
+[[ ! -d "$HOME/.cargo/env" ]] || . "$HOME/.cargo/env"
 
 # Golang
 export PATH="$HOME/go/bin:$PATH"
