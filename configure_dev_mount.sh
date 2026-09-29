@@ -130,7 +130,7 @@ phase-header "3" "Directories"
 
 # --- Directory structure ---
 echo_title "Creating volume directory structure..."
-TARGET_DIRS=("_global" "external" "internal" "local" "scripts" "worktrees")
+TARGET_DIRS=("_global" "bin" "external" "internal" "local" "scripts" "worktrees")
 for dir in "${TARGET_DIRS[@]}"; do
   echo_item "mkdir -p $MOUNT_POINT/$dir"
   mkdir -p "$MOUNT_POINT/$dir"
