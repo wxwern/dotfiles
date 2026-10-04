@@ -124,9 +124,9 @@ defaults -currentHost write -globalDomain NSStatusItemSelectionPadding -int 8
 # --- Dock & Mission Control Operations ---
 # Reference: https://macos-defaults.com/dock/
 echo_title "Configuring Dock and Mission Control..."
-echo_item "Enabling autohide with 1s delay"
-defaults write com.apple.dock autohide -bool true        # false as default
-defaults write com.apple.dock autohide-delay -float 1000 # delete to revert
+echo_item "Permanently hiding dock and disable mouse activation (autohide with 10000s delay)"
+defaults write com.apple.dock autohide -bool true         # false as default
+defaults write com.apple.dock autohide-delay -float 10000 # delete to revert
 
 echo_item "Displaying CMD-Tab app switcher on all displays"
 defaults write com.apple.dock appswitcher-all-displays -bool true
