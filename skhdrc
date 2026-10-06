@@ -326,8 +326,7 @@ default, noscripting < ctrl + cmd - t : \
     osascript -e 'if application "iTerm" is not running then tell application "iTerm" to activate' && \
     osascript -e 'tell application "iTerm" to create window with default profile'
 default, noscripting < shift + ctrl + cmd - t : \
-    USER=$(whoami) \
-    osascript -e 'tell application "Finder" to make new Finder window to folder "Macintosh HD:Users:'"$USER"':"' && \
+    osascript -e 'tell application "Finder" to make new Finder window to folder (path to home folder)' && \
     osascript -e 'tell application "Finder" to activate'
 
 default, noscripting < fn - c: skhd -k "ctrl - f2"
