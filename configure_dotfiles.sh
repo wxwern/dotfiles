@@ -253,6 +253,16 @@ if [[ -f ~/.vim/autoload/plug.vim || -f ~/.local/share/nvim/site/autoload/plug.v
         vim +PlugInstall +qall
         nvim +PlugInstall +qall
     fi
+
+    # install coc extensions?
+    read -p "Update/install coc.nvim extensions? (y/N) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]
+    then
+        echo_item "Installing coc.nvim extensions into vim & nvim"
+        vim -c 'source coc-extensions.vim'
+        nvim -c 'source coc-extensions.vim'
+    fi
 fi
 
 if command -v skhd &>/dev/null; then
