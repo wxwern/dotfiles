@@ -189,6 +189,13 @@ brew trust --command domt4/autoupdate/autoupdate
 brew autoupdate stop
 brew autoupdate start --upgrade --cleanup --sudo
 
+# --- Git Operations ---
+echo_title "Configuring Git..."
+echo_item "Enabling Git rerere (reuse recorded resolution)"
+git config --global rerere.enabled true
+echo_item "Setting Git conflict style to diff3"
+git config --global merge.conflictstyle diff3
+
 # --- Safari Operations ---
 echo_title "Configuring Safari..."
 if pgrep -x "Safari" > /dev/null; then
